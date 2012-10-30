@@ -1,4 +1,4 @@
-<div class="extjs-frame" id="<%$htmlid%>">
+<div class="extjs-frame" style="overflow: hidden;" id="<%$htmlid%>">
 	
 </div>
 <script type="text/javascript">
