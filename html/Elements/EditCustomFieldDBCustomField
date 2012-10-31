@@ -3,7 +3,10 @@
 </div>
 <script type="text/javascript">
 	Ext.onReady(function() {
-		dbcf.createCombo(<% $json | n %>);
+		var task = new Ext.util.DelayedTask(function() {
+		  dbcf.createCombo(<% $json | n %>);
+		});
+		task.delay(300);
 	});
 </script>
 <%INIT>
