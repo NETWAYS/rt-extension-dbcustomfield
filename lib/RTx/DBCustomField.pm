@@ -2,6 +2,7 @@ package RTx::DBCustomField;
 
 use strict;
 use version;
+use 5.010;
 
 our $VERSION="1.0.0";
 
