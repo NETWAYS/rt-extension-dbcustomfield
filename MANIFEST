@@ -1,6 +1,5 @@
 .project
 doc/example.sugarcrm
-html/Callbacks/RTx-DBCustomField/Elements/ColumnMap/Once
 html/Callbacks/RTx-DBCustomField/Elements/Header/Head
 html/Callbacks/RTx-DBCustomField/Search/Elements/PickCFs/Default
 html/Elements/EditCustomFieldDBCustomField
