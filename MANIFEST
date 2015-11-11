@@ -26,3 +26,4 @@ lib/RTx/DBCustomField.pm
 lib/RTx/DBCustomField/Pool.pm
 Makefile.PL
 MANIFEST			This list of files
+META.yml
