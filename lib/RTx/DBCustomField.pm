@@ -115,7 +115,11 @@ sub getReturnValue {
 			my $re = $sth->execute();
 			
 			my $ref = $sth->fetchrow_hashref();
-			
+
+			if (! $self->{'pool'}->usePool) {
+				$c->disconnect();
+			}
+
 			return unless ($ref);
 			return $self->convertHashToUtf8($ref);
 		}
@@ -284,6 +288,10 @@ sub callQuery {
 			
 			while (my $row = $sth->fetchrow_hashref) {
 				push @out, $self->convertHashToUtf8($row);
+			}
+
+			if (! $self->{'pool'}->usePool) {
+				$c->disconnect();
 			}
 			
 			return \@out;

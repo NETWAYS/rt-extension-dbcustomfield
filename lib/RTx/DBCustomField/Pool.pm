@@ -10,8 +10,9 @@ sub new {
 	my $classname = shift;
 	my $type = ref $classname || $classname;
 	return bless {
-		'connections' => {},
-		'configurations' => {}
+		'connections'		=> {},
+		'configurations'	=> {},
+		'use_pool'			=> 1
 	}, $type;
 }
 
@@ -39,14 +40,16 @@ sub getConfiguration {
 sub getConnection {
 	my $self = shift;
 	my $name = shift;
+
+	my ($dbh);
 	
 	if ($self->validConfiguration($name)) {
 		RT->Logger->info('Acquire connection: '. $name);
 		
-		unless ($self->validConnection($name)) {
+		if (! $self->validConnection($name)) {
 			RT->Logger->info('Creating new: '. $name);
 			my $c = $self->getConfiguration($name);
-			my $dbh = DBI->connect($c->{'dsn'}, $c->{'username'}, $c->{'password'});
+			$dbh = DBI->connect($c->{'dsn'}, $c->{'username'}, $c->{'password'});
 			
 			my $rc = $dbh->ping();
 			if ($rc) {
@@ -55,14 +58,27 @@ sub getConnection {
 				my $version = $dbh->get_info($GetInfoType{SQL_DBMS_VER});
 				if ($version) {
 					RT->Logger->info("$name is a $version");
-					
-					$self->{'connections'}->{$name} = $dbh;
+
+					if ($self->{'use_pool'}) {
+						$self->{'connections'}->{$name} = $dbh;
+					}
+				} else {
+					undef($dbh);
 				}
 			}
 		}
-		
-		return $self->{'connections'}->{$name};
+
+		if ($self->{use_pool}) {
+			return $self->{'connections'}->{$name};
+		}
+
+		return $dbh;
 	}
+}
+
+sub usePool {
+	my $self = shift;
+	return $self->{'use_pool'};
 }
 
 sub init {
@@ -71,12 +87,19 @@ sub init {
 	RT->Logger->info('Init connections');
 	
 	my $c = RT->Config->Get('RTx_DBCustomField_Connections');
+
+	my $disable_pool = RT->Config->Get('RTx_DBCustomField_DisablePool');
+
+	if (defined $disable_pool && $disable_pool eq '1') {
+		RT->Logger->info('Connection pooling is disabled');
+		$self->{'use_pool'} = 0;
+	}
 	
 	for my $name (keys(%{$c})) {
 		my $config = $c->{$name};
 		$self->{'configurations'}->{$name} = $config;
 		
-		if (exists($config->{'autoconnect'}) && $config->{'autoconnect'} eq 1) {
+		if (exists($config->{'autoconnect'}) && $config->{'autoconnect'} eq 1 && $self->{'use_pool'}) {
 			$self->getConnection($name);
 		}
 	}
