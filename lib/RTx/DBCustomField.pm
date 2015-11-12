@@ -117,6 +117,7 @@ sub getReturnValue {
 			my $ref = $sth->fetchrow_hashref();
 
 			if (! $self->{'pool'}->usePool) {
+				$sth->finish() if ($sth);
 				$c->disconnect();
 			}
 
@@ -291,6 +292,7 @@ sub callQuery {
 			}
 
 			if (! $self->{'pool'}->usePool) {
+				$sth->finish() if ($sth);
 				$c->disconnect();
 			}
 			
