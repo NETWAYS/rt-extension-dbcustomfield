@@ -6,6 +6,8 @@ use v5.10.1;
 
 our $VERSION="1.1.0";
 
+RT->AddJavaScript('dbcustomfield-init.js');
+
 use RT::Extension::DBCustomField::Pool;
 use utf8;
 use Data::Dumper;

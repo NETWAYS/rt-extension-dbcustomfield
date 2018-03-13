@@ -1,11 +1,10 @@
 .project
 doc/example.sugarcrm
-html/Callbacks/RTx-DBCustomField/Elements/Header/Head
-html/Callbacks/RTx-DBCustomField/Search/Elements/PickCFs/Default
+html/Callbacks/RT-Extension-DBCustomField/Search/Elements/PickCFs/Default
 html/Elements/EditCustomFieldDBCustomField
 html/Elements/ShowCustomFieldDBCustomField
-html/NoAuth/RTx-DBCustomField/init.js
-html/RTx/DBCustomField/Provider.html
+html/static/js/dbcustomfield-init.js
+html/RT-Extension-DBCustomField/Provider.html
 inc/Module/Install.pm
 inc/Module/Install/Base.pm
 inc/Module/Install/Can.pm
@@ -21,8 +20,8 @@ inc/Module/Install/WriteAll.pm
 inc/unicore/Name.pm
 inc/YAML/Tiny.pm
 lib/RT/CustomField_Local.pm
-lib/RTx/DBCustomField.pm
-lib/RTx/DBCustomField/Pool.pm
+lib/RT/Extension/DBCustomField.pm
+lib/RT/Extension/DBCustomField/Pool.pm
 Makefile.PL
 MANIFEST			This list of files
 META.yml
