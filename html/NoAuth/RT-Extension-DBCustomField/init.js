@@ -5,7 +5,7 @@ Ext.require([
 ]);
 
 Ext.application({
-    name: 'RTx-DBCustomField',
+    name: 'RT-Extension-DBCustomField',
     launch: function() {
 % while(my($name, $c) = each(%{ $sources })) {
     		<&.createModel, config => $c, name => $name&>
@@ -117,7 +117,7 @@ unless ($session{'CurrentUser'}->Id) {
 	return;
 }
 
-my $sources = RTx::DBCustomField->new()->getQueries();
+my $sources = RT::Extension::DBCustomField->new()->getQueries();
 
 $r->content_type('application/x-javascript');
 </%init>

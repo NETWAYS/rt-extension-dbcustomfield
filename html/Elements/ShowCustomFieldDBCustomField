@@ -5,7 +5,7 @@
  my $ticket = $Object->ObjectType->new($session{'CurrentUser'});
  $ticket->Load($Object->ObjectId);
  
- my $out = RTx::DBCustomField->new()->getReturnValueSmall($Object->CustomFieldObj, $content, $ticket);
+ my $out = RT::Extension::DBCustomField->new()->getReturnValueSmall($Object->CustomFieldObj, $content, $ticket);
 </%init>
 <%ARGS>
 $Object

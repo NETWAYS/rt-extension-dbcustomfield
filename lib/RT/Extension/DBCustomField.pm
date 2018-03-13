@@ -1,11 +1,12 @@
-package RTx::DBCustomField;
+package RT::Extension::DBCustomField;
 
 use strict;
 use version;
+use v5.10.1;
 
 our $VERSION="1.1.0";
 
-use RTx::DBCustomField::Pool;
+use RT::Extension::DBCustomField::Pool;
 use utf8;
 use Data::Dumper;
 
@@ -17,9 +18,9 @@ sub new {
 	my $classname = shift;
 	my $type = ref $classname || $classname;
 
-	unless (ref $INSTANCE eq 'RTx::DBCustomField') {
+	unless (ref $INSTANCE eq 'RT::Extension::DBCustomField') {
 		$INSTANCE = bless {
-			'pool'	=> RTx::DBCustomField::Pool->new()
+			'pool'	=> RT::Extension::DBCustomField::Pool->new()
 		}, $type;
 
 		RT->Logger->info('Creating new instance of '. ref($INSTANCE));
@@ -315,13 +316,13 @@ sub convertHashToUtf8 {
 	return $ref;
 }
 
-RTx::DBCustomField->new();
+RT::Extension::DBCustomField->new();
 1;
 =pod
 
 =head1 NAME
 
-RTx::DBCustomField
+RT::Extension::DBCustomField
 
 =head1 VERSION
 

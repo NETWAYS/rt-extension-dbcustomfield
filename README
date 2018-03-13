@@ -1,5 +1,5 @@
 NAME
-    RTx::DBCustomField
+    RT::Extension::DBCustomField
 
 VERSION
     version 1.1.0
