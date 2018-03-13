@@ -4,7 +4,7 @@ use strict;
 use version;
 use 5.010;
 
-our $VERSION="1.0.0";
+our $VERSION="1.1.0";
 
 use RTx::DBCustomField::Pool;
 use utf8;

@@ -1,10 +1,11 @@
-use strict;
 use inc::Module::Install;
 
-RTx('RTx-DBCustomField');
-author('Marius Hein <marius.hein@netways.de>');
-version('1.0');
-license('gpl');
+RTx     'RT-Extension-DBCustomField';
+license 'gpl_2';
+repository 'https://github.com/NETWAYS/rt-extension-dbcustomfield';
 
-&WriteAll;
+requires_rt '4.4.2';
+rt_too_new '4.6.0';
 
+sign;
+WriteAll;
