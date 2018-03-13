@@ -1,4 +1,4 @@
-package RTx::DBCustomField::Pool;
+package RT::Extension::DBCustomField::Pool;
 
 use strict;
 use Data::Dumper;

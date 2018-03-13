@@ -18,7 +18,7 @@
 		return;
 	}
 	
-	my ($name, $c) = RTx::DBCustomField->new()->getConfigByCustomField($CustomField);
+	my ($name, $c) = RT::Extension::DBCustomField->new()->getConfigByCustomField($CustomField);
 	
 	my $fieldName = '';
 	if ($Name) {
@@ -36,7 +36,7 @@
 	
 	if ($Values && $Values->Count()) {
 		my $value = $Values->Next()->Content;
-		$selectedData = RTx::DBCustomField->new()->getReturnValue($name, $value, $ticket);
+		$selectedData = RT::Extension::DBCustomField->new()->getReturnValue($name, $value, $ticket);
 	}
 	
 	my $json = encode_json({
