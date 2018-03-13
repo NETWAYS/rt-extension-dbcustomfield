@@ -160,7 +160,7 @@ $r->content_type('application/x-javascript');
 		model => "dbcf.model.$name",
 		proxy => {
 			type => 'ajax',
-			url => RT->Config->Get('WebURL'). "/RTx/DBCustomField/Provider.html?source=$name",
+			url => RT->Config->Get('WebURL'). "/RT-Extension-DBCustomField/Provider.html?source=$name",
 			reader => {
 				type => 'json',
 				root => 'result'
