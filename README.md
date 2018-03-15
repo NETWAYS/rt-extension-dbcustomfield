@@ -21,7 +21,9 @@ Connect databases to custom fields.
 
 ## License
 
-This project is licensed under the terms of the GNU General Public License Version 2, Copyright held by author.
+This project is licensed under the terms of the GNU General Public License Version 2.
+
+This software is Copyright (c) 2018 by NETWAYS GmbH <[support@netways.de](mailto:support@netways.de)>.
 
 ## Support
 
