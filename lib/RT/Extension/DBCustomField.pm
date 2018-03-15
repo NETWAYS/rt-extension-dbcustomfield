@@ -41,8 +41,8 @@ sub getConfigByName {
 	my $self = shift;
 	my $name = shift;
 
-	if (exists (RT->Config->Get('RTx_DBCustomField_Queries')->{$name})) {
-		return RT->Config->Get('RTx_DBCustomField_Queries')->{$name};
+	if (exists (RT->Config->Get('DBCustomField_Queries')->{$name})) {
+		return RT->Config->Get('DBCustomField_Queries')->{$name};
 	}
 
 	return undef;
@@ -52,16 +52,16 @@ sub getConfigByCustomFieldName {
 	my $self = shift;
 	my $name = shift;
 
-	if (exists(RT->Config->Get('RTx_DBCustomField_Fields')->{$name})) {
-		my $id = RT->Config->Get('RTx_DBCustomField_Fields')->{$name};
-		return ($id, RT->Config->Get('RTx_DBCustomField_Queries')->{$id});
+	if (exists(RT->Config->Get('DBCustomField_Fields')->{$name})) {
+		my $id = RT->Config->Get('DBCustomField_Fields')->{$name};
+		return ($id, RT->Config->Get('DBCustomField_Queries')->{$id});
 	}
 }
 
 sub getQueries {
 	my $self = shift;
 
-	my $c = RT->Config->Get('RTx_DBCustomField_Queries');
+	my $c = RT->Config->Get('DBCustomField_Queries');
 	if (ref($c) eq 'HASH') {
 		return $c;
 	}
@@ -74,15 +74,15 @@ sub getConfigByCustomField {
 	my $cf = shift;
 	my $id = undef;
 
-	if (exists(RT->Config->Get('RTx_DBCustomField_Fields')->{$cf->Name})) {
-		$id = RT->Config->Get('RTx_DBCustomField_Fields')->{$cf->Name};
+	if (exists(RT->Config->Get('DBCustomField_Fields')->{$cf->Name})) {
+		$id = RT->Config->Get('DBCustomField_Fields')->{$cf->Name};
 	}
-	elsif (exists(RT->Config->Get('RTx_DBCustomField_Fields')->{$cf->Id})) {
-		$id = RT->Config->Get('RTx_DBCustomField_Fields')->{$cf->Id};
+	elsif (exists(RT->Config->Get('DBCustomField_Fields')->{$cf->Id})) {
+		$id = RT->Config->Get('DBCustomField_Fields')->{$cf->Id};
 	}
 
 	if ($id) {
-		return ($id, RT->Config->Get('RTx_DBCustomField_Queries')->{$id});
+		return ($id, RT->Config->Get('DBCustomField_Queries')->{$id});
 	}
 }
 
@@ -233,10 +233,13 @@ sub callQuery {
 	my $q = $ARGRef->{'query'};
 	my $ticket = $ARGRef->{'ticket'};
 
-	RT->Logger->info("NAME: $name, q: $q, TICKET: $ticket");
+	RT->Logger->info("NAME: $name, QUERY: $q, TICKET: $ticket");
 
 	if ((my $qref = $self->getQueryHash($name))) {
+		#RT->Logger->debug(Dumper($qref));
+
 		if ((my $c = $self->{pool}->getConnection($qref->{'connection'}))) {
+			#RT->Logger->debug(Dumper($c));
 
 			my $query = $qref->{'query'};
 
@@ -281,6 +284,8 @@ sub callQuery {
 				$sth = $c->prepare($query);
 			}
 
+			#RT->Logger->info("Statement: " + $sth->{Statement});
+
 			my $re = $sth->execute();
 
 			if (!$re && $c->errstr()) {
@@ -290,7 +295,9 @@ sub callQuery {
 			my (@out);
 
 			while (my $row = $sth->fetchrow_hashref) {
-				push @out, $self->convertHashToUtf8($row);
+				my $dataRow = $self->convertHashToUtf8($row);
+				#RT->Logger->info("ROW: " + $dataRow);
+				push @out, $dataRow;
 			}
 
 			if (! $self->{'pool'}->usePool) {

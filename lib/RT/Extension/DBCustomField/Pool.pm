@@ -73,6 +73,8 @@ sub getConnection {
 		}
 
 		return $dbh;
+	} else {
+		RT->Logger->crit("Invalid connection configuration for '$name'.");
 	}
 }
 
@@ -86,9 +88,9 @@ sub init {
 	
 	RT->Logger->info('Init connections');
 	
-	my $c = RT->Config->Get('RTx_DBCustomField_Connections');
+	my $c = RT->Config->Get('DBCustomField_Connections');
 
-	my $disable_pool = RT->Config->Get('RTx_DBCustomField_DisablePool');
+	my $disable_pool = RT->Config->Get('DBCustomField_DisablePool');
 
 	if (defined $disable_pool && $disable_pool eq '1') {
 		RT->Logger->info('Connection pooling is disabled');

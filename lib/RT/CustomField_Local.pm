@@ -24,10 +24,10 @@ sub IsExternalValues {
 sub isDBCustomField {
 	my $self = shift;
 	if ($self->Type eq 'DBCustomField') {
-    	if (exists(RT->Config->Get('RTx_DBCustomField_Fields')->{$self->Name})) {
+    	if (exists(RT->Config->Get('DBCustomField_Fields')->{$self->Name})) {
     		return 1;
     	}
-    	elsif (exists(RT->Config->Get('RTx_DBCustomField_Fields')->{$self->Id})) {
+    	elsif (exists(RT->Config->Get('DBCustomField_Fields')->{$self->Id})) {
     		return 1;
     	}
     }
