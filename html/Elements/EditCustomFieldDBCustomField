@@ -1,17 +1,11 @@
-<div class="extjs-frame" style="overflow: hidden;" id="<%$htmlid%>">
-
+<div class="rt-extension-dbcustomfield-search" id="<%$htmlid%>">
+<!-- this is what the user sees as dropdown field, the real input is hidden -->
+<input name="rt-extension-dbcustomfield-search-input" style="width: 400px; table-layout: fixed;">
+<input name="<%$fieldName%>" type="hidden" value="">
 </div>
-<script type="text/javascript">
-	Ext.onReady(function() {
-		var task = new Ext.util.DelayedTask(function() {
-		  dbcf.createCombo(<% $json | n %>);
-		});
-		task.delay(300);
-	});
-</script>
 <%INIT>
 	$idcount++;
-	my $htmlid="rtx-dbcustomfield-$idcount";
+	my $htmlid="rt-extension-dbcustomfield-$idcount";
 
 	unless ($CustomField->isDBCustomField()) {
 		$m->out('No DB customfield!');
@@ -39,6 +33,7 @@
 		$selectedData = RT::Extension::DBCustomField->new()->getReturnValue($name, $value, $ticket);
 	}
 
+	# Prepare configuration for JS
 	my $json = encode_json({
 		sourceName => $name,
 		fieldName => $fieldName,
@@ -53,6 +48,92 @@
 	});
 
 </%INIT>
+
+<script type="text/javascript">
+
+	var $ = jQuery; // RT doesn't do that for us.
+
+	$( function() {
+
+		//var config = $.parseJSON('<% $json | n %>');
+
+		$( "input[name=rt-extension-dbcustomfield-search-input]" ).autocomplete({
+			delay: 500,
+			minLength: 2,
+			open: function() {
+				if ($(this).is(':not(:focus)')) {
+					$(this).autocomplete('close');
+				}
+			},
+			source: function (request, response){
+
+				//console.log($(this));
+
+				var dataURL = "<% RT->Config->Get('WebURL') %>" + "RT-Extension-DBCustomField/Provider.html?source="
+				    + "<%$name%>" + "&query=" + $("input[name=rt-extension-dbcustomfield-search-input]").val();
+
+				//TODO: Remove
+				console.log("Requesting data from URL: " + dataURL);
+
+				$.ajax({
+					type: "POST",
+					url: dataURL,
+					contentType: "application/json; charset=utf-8",
+					dataType: "json", // let JQuery automatically convert the response to JSON. https://stackoverflow.com/questions/5289078/parse-json-from-jquery-ajax-success-data
+					success: function (data, text) {
+						// Provider.html puts
+						// - result[] with hashes inside
+						// - { "globalid", "id", "name", "net_global_id_c", "shortname", "shortname_c" } which are defined in the configuration as 'returnfields' and 'returnfield_id'
+						// We need to respect the user template defined in 'returnfield_small_tpl' aka config->{'returnfieldSmallTpl'}
+
+
+						console.log("success: " + text);
+						console.log(data);
+
+						// return formatted data
+						var formattedResponse = [];
+
+						$.each(data.result, function (i, a, k) {
+							formattedResponse.push({ "name": a.name, "id": a.id, "globalid": a.globalid }); //TODO: Template
+						});
+
+						response(formattedResponse.slice(0, 10)); //limit result set
+					},
+					error: function (request, status, error) {
+						console.log("error: " + request.responseText);
+					}
+				})
+
+			},
+			select: function(event, ui) {
+				console.log( "Selected: " + ui.item.name + " aka " + ui.item.globalid );
+
+				//the 'name' is what the user sees in the input field which we defined ourselves.
+				//fieldName is generated from RT, this input is hidden and already available. This is what the form sends as value from 'globalid'.
+
+				$(this).val(ui.item.name);
+
+				$("input[name='<%$fieldName%>']").val(ui.item.globalid);
+
+				//tell autocomplete that the select event has set a value
+				return false;
+			},
+			close: function(event, ui) {
+				return true;
+			}
+		})
+		// fancy. https://stackoverflow.com/questions/9513251/cannot-set-property-renderitem-of-undefined-jquery-ui-autocomplete-with-html
+		.data("ui-autocomplete")._renderItem = function (ul, item) {
+			//Overwrite received data with our own template - TODO, use ours?
+			return $("<li></li>")
+			.data("ui-autocomplete-item", item)
+			.append(item.name + " (<b>" + item.id + "</b>)")
+			.appendTo(ul);
+		}; // .data("ui-autocomplete")
+
+	}); // function
+</script>
+
 <%ARGS>
 $Object => undef
 $CustomField => undef
