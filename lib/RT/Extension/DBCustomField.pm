@@ -384,9 +384,9 @@ connection above.
 
     Set ($DBCustomField_Queries, {
             'companies' => {
-                
+
                 'connection'    => 'sugarcrm',
-                
+
                     'query' => q{
                             SELECT
                             __DBCF_FIELDS__
@@ -396,20 +396,20 @@ connection above.
                             order by shortname
                             LIMIT 300;
                     },
-    
+
                     'searchfields'  => ['cstm.shortname_c', 'a.name', 'cstm.net_global_id_c'],
                     'searchop'      => 'OR',
-    
+
                     'fields'         => {
                       'shortname'  => 'cstm.shortname_c',
                       'globalid'  => 'cstm.net_global_id_c',
                       'name'    => 'a.name'
                     },
-                    
+
                     'field_id' => 'cstm.net_global_id_c',
-                    
+
                     'field_id_type' => 'string', # (Default is int)
-                    
+
                     'field_tpl' => q{
                       <div>
                         <tpl if="shortname">
@@ -418,9 +418,9 @@ connection above.
                         <div>{name} (<span style="font-weight: bold;">{globalid}</span>)</div>
                       </div>
                      },
-                     
+
                      'field_config' => {},
-    
+
                     'returnquery'   => q{
                             SELECT
                                     __DBCF_FIELDS__
@@ -429,19 +429,19 @@ connection above.
                             where cstm.net_global_id_c=?
                             LIMIT 100
                     },
-                    
+
                     'returnfields'         => {
                       'shortname'  => 'cstm.shortname_c',
                       'globalid'  => 'cstm.net_global_id_c',
                       'name'    => 'a.name'
                     },
-                    
+
                     'returnfield_id' => 'cstm.net_global_id_c',
-                    
+
                     'returnfield_config' => {
                       height => 50
                     },
-                    
+
                     'returnfield_tpl' => q{
                       <div>
                         <tpl if="shortname">
@@ -450,10 +450,10 @@ connection above.
                         <div>{name} (<span style="font-weight: bold;">{globalid}</span>)</div>
                       </div>
                     },
-                    
+
                     'returnfield_small_tpl' => q{{shortname} ({globalid})}
-                    
-                    
+
+
       },
     });
 

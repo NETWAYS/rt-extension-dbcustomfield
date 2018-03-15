@@ -17,32 +17,32 @@ Ext.application({
 Ext.define('dbcf', {
     singleton: true,
     createCombo: function(o) {
-    	
+
 		var ele = Ext.get(o.id);
 		if (ele) {
-			
+
 			var hidden = Ext.create('Ext.form.field.Hidden', {
 				name: o.fieldName,
 				value: null
 			});
-			
+
 			var outputConfig = Ext.apply({
 				html: 'OUTPUT',
 				height: 20,
 				bodyStyle: 'padding: 2px',
 				width: 400
 			}, o.returnFieldConfig || {});
-			
+
 			if (o.returnFieldTpl) {
 				outputConfig.tpl = new Ext.XTemplate(o.returnFieldTpl);
 			}
-			
+
 			if (Ext.isEmpty(o.value)) {
 				outputConfig.hidden = true;
 			}
-			
+
 			var output = Ext.create('Ext.Panel', outputConfig);
-			
+
 			var selectHandler = function(mixed) {
 				if ("data" in mixed) {
 					hidden.setValue(mixed.getId());
@@ -51,12 +51,12 @@ Ext.define('dbcf', {
 					hidden.setValue(mixed.id);
 					output.update(mixed);
 				}
-				
+
 				if (output.isHidden()) {
 					output.show();
 				}
 			}
-			
+
 			var comboConfig = Ext.apply({
 				store: o.sourceName,
 				labelWidth: 0,
@@ -73,17 +73,17 @@ Ext.define('dbcf', {
 						selectHandler(record);
 					}
 				}
-				
+
 			}, o.fieldConfig || {});;
-			
+
 			if (o.fieldTpl) {
 				comboConfig.listConfig = {
 						itemTpl: new Ext.XTemplate(o.fieldTpl)
 				};
 			}
-			
+
 			var combo = Ext.create('Ext.form.ComboBox', comboConfig);
-			
+
 			// Ticket data for provider substitution
 			if (Ext.isEmpty(o.objectType) === false && Ext.isEmpty(o.objectId) === false) {
 				combo.getStore().on('beforeload', function(myStore, myOperation, myEOpts) {
@@ -91,7 +91,7 @@ Ext.define('dbcf', {
 					myOperation.params.objectId = o.objectId;
 				});
 			}
-		
+
 			var container = Ext.create('Ext.Container', {
 				id : o.sourceName + '-container',
 				items : [combo, output, hidden],
@@ -104,9 +104,9 @@ Ext.define('dbcf', {
 					}
 				}
 			});
-			
+
 			container.render
-			
+
 			container.doLayout();
 		}
     }
@@ -133,15 +133,15 @@ $r->content_type('application/x-javascript');
 	my $fields = ();
 	if ($config->{'fields'}) {
 		for my $key(keys(%{ $config->{'fields'} })) {
-			push @{$fields}, { 
-				name => $key, 
+			push @{$fields}, {
+				name => $key,
 				type => 'string'
 			};
 		}
-		
+
 		if ($config->{'field_id'}) {
-			push @{$fields}, { 
-				name => 'id', 
+			push @{$fields}, {
+				name => 'id',
 				type => $config->{'field_id_type'} || 'int'
 			};
 		}

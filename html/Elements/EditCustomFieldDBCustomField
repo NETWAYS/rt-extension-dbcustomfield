@@ -1,5 +1,5 @@
 <div class="extjs-frame" style="overflow: hidden;" id="<%$htmlid%>">
-	
+
 </div>
 <script type="text/javascript">
 	Ext.onReady(function() {
@@ -12,33 +12,33 @@
 <%INIT>
 	$idcount++;
 	my $htmlid="rtx-dbcustomfield-$idcount";
-	
+
 	unless ($CustomField->isDBCustomField()) {
 		$m->out('No DB customfield!');
 		return;
 	}
-	
+
 	my ($name, $c) = RT::Extension::DBCustomField->new()->getConfigByCustomField($CustomField);
-	
+
 	my $fieldName = '';
 	if ($Name) {
 		$fieldName = $Name;
 	} else {
 		$fieldName = $NamePrefix. $CustomField->Id. '-Values';
 	}
-	
+
 	my $ticket = undef;
 	if (ref($Object) eq 'RT::Ticket') {
 		$ticket = $Object;
 	}
-	
+
 	my $selectedData = undef;
-	
+
 	if ($Values && $Values->Count()) {
 		my $value = $Values->Next()->Content;
 		$selectedData = RT::Extension::DBCustomField->new()->getReturnValue($name, $value, $ticket);
 	}
-	
+
 	my $json = encode_json({
 		sourceName => $name,
 		fieldName => $fieldName,
@@ -51,7 +51,7 @@
 		objectType => $ticket ? ref($ticket) : '',
 		objectId => $ticket ? $ticket->Id : ''
 	});
-	
+
 </%INIT>
 <%ARGS>
 $Object => undef

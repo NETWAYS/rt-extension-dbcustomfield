@@ -42,19 +42,19 @@ sub getConnection {
 	my $name = shift;
 
 	my ($dbh);
-	
+
 	if ($self->validConfiguration($name)) {
 		RT->Logger->info('Acquire connection: '. $name);
-		
+
 		if (! $self->validConnection($name)) {
 			RT->Logger->info('Creating new: '. $name);
 			my $c = $self->getConfiguration($name);
 			$dbh = DBI->connect($c->{'dsn'}, $c->{'username'}, $c->{'password'});
-			
+
 			my $rc = $dbh->ping();
 			if ($rc) {
 				RT->Logger->info("Connection $name successfully pinged");
-				
+
 				my $version = $dbh->get_info($GetInfoType{SQL_DBMS_VER});
 				if ($version) {
 					RT->Logger->info("$name is a $version");
@@ -85,9 +85,9 @@ sub usePool {
 
 sub init {
 	my $self = shift;
-	
+
 	RT->Logger->info('Init connections');
-	
+
 	my $c = RT->Config->Get('DBCustomField_Connections');
 
 	my $disable_pool = RT->Config->Get('DBCustomField_DisablePool');
@@ -96,11 +96,11 @@ sub init {
 		RT->Logger->info('Connection pooling is disabled');
 		$self->{'use_pool'} = 0;
 	}
-	
+
 	for my $name (keys(%{$c})) {
 		my $config = $c->{$name};
 		$self->{'configurations'}->{$name} = $config;
-		
+
 		if (exists($config->{'autoconnect'}) && $config->{'autoconnect'} eq 1 && $self->{'use_pool'}) {
 			$self->getConnection($name);
 		}

@@ -6,7 +6,7 @@
 				$cf->{'Value'}->{'Path'} = '/Elements/EditCustomFieldDBCustomField';
 				$cf->{'Value'}->{'Arguments'}->{'Rows'} = 0;
 				$cf->{'Value'}->{'Arguments'}->{'Cols'} = 0;
-			}  
+			}
 		}
 	}
 </%init>
