@@ -47,14 +47,21 @@
 		objectId => $ticket ? $ticket->Id : ''
 	});
 
+	my $fieldTpl = $c->{field_tpl} || undef;
+
+	$fieldTpl =~ s/\n//g;
+	$fieldTpl =~ s/\r//g;
+	$fieldTpl =~ s/^\s+|\s+$//g;
+
+	my $fieldID = $c->{field_id};
 </%INIT>
 
 <script type="text/javascript">
 
 	var $ = jQuery; // RT doesn't do that for us.
 
+	//TODO: Pass template variables as configuration hash.
 	$( function() {
-
 		//var config = $.parseJSON('<% $json | n %>');
 
 		$( "input[name=rt-extension-dbcustomfield-search-input]" ).autocomplete({
@@ -66,7 +73,6 @@
 				}
 			},
 			source: function (request, response){
-
 				//console.log($(this));
 
 				var dataURL = "<% RT->Config->Get('WebURL') %>" + "RT-Extension-DBCustomField/Provider.html?source="
@@ -79,55 +85,72 @@
 					type: "POST",
 					url: dataURL,
 					contentType: "application/json; charset=utf-8",
-					dataType: "json", // let JQuery automatically convert the response to JSON. https://stackoverflow.com/questions/5289078/parse-json-from-jquery-ajax-success-data
+					dataType: "json", // let JQuery automatically convert the response to JSON.
 					success: function (data, text) {
 						// Provider.html puts
 						// - result[] with hashes inside
 						// - { "globalid", "id", "name", "net_global_id_c", "shortname", "shortname_c" } which are defined in the configuration as 'returnfields' and 'returnfield_id'
-						// We need to respect the user template defined in 'returnfield_small_tpl' aka config->{'returnfieldSmallTpl'}
-
-
+						// TODO: Remove
 						console.log("success: " + text);
 						console.log(data);
 
-						// return formatted data
+						// Return formatted data
 						var formattedResponse = [];
 
 						$.each(data.result, function (i, a, k) {
-							formattedResponse.push({ "name": a.name, "id": a.id, "globalid": a.globalid }); //TODO: Template
+							formattedResponse.push(a); // Use the entire map, formatting is below.
 						});
 
-						response(formattedResponse.slice(0, 10)); //limit result set
+						response(formattedResponse.slice(0, 10)); // Limit result set
 					},
 					error: function (request, status, error) {
+						// TODO: Remove
 						console.log("error: " + request.responseText);
 					}
 				})
 
 			},
 			select: function(event, ui) {
+				// TODO: Remove
 				console.log( "Selected: " + ui.item.name + " aka " + ui.item.globalid );
 
-				//the 'name' is what the user sees in the input field which we defined ourselves.
-				//fieldName is generated from RT, this input is hidden and already available. This is what the form sends as value from 'globalid'.
-
+				// 'name' is what the user sees in the input field which we defined ourselves in $this.
+				//TODO: Use the small template?
 				$(this).val(ui.item.name);
 
-				$("input[name='<%$fieldName%>']").val(ui.item.globalid);
+				// 'fieldName' is our hidden input form and the global stored ID for the CF. This can be defined in the configuration.
+				$("input[name='<%$fieldName%>']").val(ui.item["<%$fieldID%>"]);
 
-				//tell autocomplete that the select event has set a value
+				// tell autocomplete that the select event has set a value
 				return false;
 			},
 			close: function(event, ui) {
 				return true;
 			}
 		})
-		// fancy. https://stackoverflow.com/questions/9513251/cannot-set-property-renderitem-of-undefined-jquery-ui-autocomplete-with-html
 		.data("ui-autocomplete")._renderItem = function (ul, item) {
-			//Overwrite received data with our own template - TODO, use ours?
+			// Overwrite received data with our own template
+			var tmpl = "<%$fieldTpl%>"; //TODO: Figure out how to avoid HTML escaping here.
+
+			// required by extractValue helper
+			this.item = item;
+			var parent = this;
+
+			function extractValue(match, string, offset) {
+				console.log("Match: '" + match + "' offset: '" + offset + "' string: '" + string + "'");
+				console.log(parent.item);
+				console.log("Item Value: " + parent.item[string]);
+
+				return parent.item[string];
+			}
+
+			var formattedTmpl = tmpl.replace(/\{([^\}]+)\}/g, extractValue)
+
+			console.log("Template: '" + tmpl + "' formatted: '" + formattedTmpl + "'");
+
 			return $("<li></li>")
 			.data("ui-autocomplete-item", item)
-			.append(item.name + " (<b>" + item.id + "</b>)")
+			.append(formattedTmpl)
 			.appendTo(ul);
 		}; // .data("ui-autocomplete")
 
