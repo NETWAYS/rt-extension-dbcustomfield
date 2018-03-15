@@ -324,23 +324,155 @@ RT::Extension::DBCustomField->new();
 
 =head1 NAME
 
-RT::Extension::DBCustomField
+RT::Extension::DBCustomField - Connect databases to custom fields
 
 =head1 VERSION
 
 version 1.1.0
 
+=head1 RT VERSION
+
+Works with RT 4.4.2
+
+=head1 INSTALLATION
+
+=over
+
+=item C<perl Makefile.PL>
+
+=item C<make>
+
+=item C<make install>
+
+May need root permissions
+
+=item Edit your F</opt/rt4/etc/RT_SiteConfig.pm>
+
+    Plugin('RT::Extension::DBCustomField');
+
+=item Clear your mason cache
+
+    rm -rf /opt/rt4/var/mason_data/obj
+
+=item Restart your webserver
+
+=back
+
+=head1 CONFIGURATION
+
+You need to specify C<$DBCustomField_Connections> which is a hash of connections.
+
+   Set($DBCustomField_Connections, {
+     'sugarcrm' => {
+       'dsn'      => 'DBI:mysql:database=SUGARCRMDB;host=MYHOST;port=3306;mysql_enable_utf8=1',
+       'username'    => 'USER',
+       'password'    => 'PASS',
+       'autoconnect'  => 1
+     }
+   });
+
+This cannection is then used to define the specific queries. The key identifies the values
+returned for later CF assignment. The 'connection' identifier is linked to the specified
+connection above.
+
+    Set ($DBCustomField_Queries, {
+            'companies' => {
+                
+                'connection'    => 'sugarcrm',
+                
+                    'query' => q{
+                            SELECT
+                            __DBCF_FIELDS__
+                            from accounts a
+                            inner join accounts_cstm cstm on cstm.id_c = a.id and cstm.net_global_id_c
+                            WHERE a.deleted=0 __DBCF_AND_WHERE__
+                            order by shortname
+                            LIMIT 300;
+                    },
+    
+                    'searchfields'  => ['cstm.shortname_c', 'a.name', 'cstm.net_global_id_c'],
+                    'searchop'      => 'OR',
+    
+                    'fields'         => {
+                      'shortname'  => 'cstm.shortname_c',
+                      'globalid'  => 'cstm.net_global_id_c',
+                      'name'    => 'a.name'
+                    },
+                    
+                    'field_id' => 'cstm.net_global_id_c',
+                    
+                    'field_id_type' => 'string', # (Default is int)
+                    
+                    'field_tpl' => q{
+                      <div>
+                        <tpl if="shortname">
+                          <div><span style="font-weight: bold;">{shortname}</span></div>
+                        </tpl>
+                        <div>{name} (<span style="font-weight: bold;">{globalid}</span>)</div>
+                      </div>
+                     },
+                     
+                     'field_config' => {},
+    
+                    'returnquery'   => q{
+                            SELECT
+                                    __DBCF_FIELDS__
+                            from accounts a
+                            inner join accounts_cstm cstm on cstm.id_c = a.id and cstm.net_global_id_c
+                            where cstm.net_global_id_c=?
+                            LIMIT 100
+                    },
+                    
+                    'returnfields'         => {
+                      'shortname'  => 'cstm.shortname_c',
+                      'globalid'  => 'cstm.net_global_id_c',
+                      'name'    => 'a.name'
+                    },
+                    
+                    'returnfield_id' => 'cstm.net_global_id_c',
+                    
+                    'returnfield_config' => {
+                      height => 50
+                    },
+                    
+                    'returnfield_tpl' => q{
+                      <div>
+                        <tpl if="shortname">
+                          <div><span style="font-weight: bold;">{shortname}</span></div>
+                        </tpl>
+                        <div>{name} (<span style="font-weight: bold;">{globalid}</span>)</div>
+                      </div>
+                    },
+                    
+                    'returnfield_small_tpl' => q{{shortname} ({globalid})}
+                    
+                    
+      },
+    });
+
+You need to map the database queries into custom fields. One query can be used for multiple fields if needed.
+
+    Set($DBCustomField_Fields, {
+      'client' => 'companies'
+    });
+
+
 =head1 AUTHOR
 
-NETWAYS GmbH <info@netways.de>
+NETWAYS GmbH <support@netways.de>
+
+=head1 BUGS
+
+All bugs should be reported on L<GitHub|https://github.com/NETWAYS/rt-extension-dbcustomfield>
+
 
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2018 by NETWAYS GmbH <info@netways.de>
+This software is Copyright (c) 2018 by NETWAYS GmbH <support@netways.de>
 
 This is free software, licensed under:
     GPL Version 2, June 1991
 
 =cut
 
-__END__
+1;

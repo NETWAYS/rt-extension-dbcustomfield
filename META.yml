@@ -1,7 +1,7 @@
 ---
-abstract: 'RT-Extension-DBCustomField Extension'
+abstract: 'Connect databases to custom fields'
 author:
-  - 'NETWAYS GmbH <info@netways.de>'
+  - 'NETWAYS GmbH <support@netways.de>'
 build_requires:
   ExtUtils::MakeMaker: 6.59
 configure_requires:
