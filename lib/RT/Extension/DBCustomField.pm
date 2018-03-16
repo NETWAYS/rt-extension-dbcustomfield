@@ -191,7 +191,17 @@ sub substituteQuery {
 	}
 
 	if ($h->{'idfield'}) {
-		push @fields, sprintf('%s as __dbcf_idfield__', $h->{'idfield'})
+		# Alias into fields
+		my $idfield = $h->{'idfield'};
+
+		if (!$h->{'fields'}->{$idfield}) {
+			RT->Logger->crit("Error: Missing mapping between field ID and fields configuration.");
+			return;
+		}
+
+		my $realidfield = $h->{'fields'}->{$idfield};
+
+		push @fields, sprintf('%s as __dbcf_idfield__', $realidfield)
 	}
 
 	$f_string = join(', ', @fields);
@@ -406,7 +416,8 @@ connection above.
                       'name'    => 'a.name'
                     },
 
-                    'field_id' => 'cstm.net_global_id_c',
+		    # field_id is stored as value for the CF. This setting maps it to a defined field above.
+                    'field_id' => 'globalid',
 
                     'field_id_type' => 'string', # (Default is int)
 
@@ -436,7 +447,8 @@ connection above.
                       'name'    => 'a.name'
                     },
 
-                    'returnfield_id' => 'cstm.net_global_id_c',
+		    # returnfield_id is used to select the CF value in the WHERE condition. This setting maps it to a defined field above.
+                    'returnfield_id' => 'globalid',
 
                     'returnfield_config' => {
                       height => 50
