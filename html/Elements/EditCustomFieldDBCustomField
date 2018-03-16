@@ -33,36 +33,47 @@
 		$selectedData = RT::Extension::DBCustomField->new()->getReturnValue($name, $value, $ticket);
 	}
 
+	my $fieldTpl = $c->{field_tpl} || undef;
+	$fieldTpl =~ s/\n//g;
+	$fieldTpl =~ s/\r//g;
+	$fieldTpl =~ s/^\s+|\s+$//g;
+	my $returnFieldTpl = $c->{returnfield_tpl} || undef;
+	$returnFieldTpl =~ s/\n//g;
+	$returnFieldTpl =~ s/\r//g;
+	$returnFieldTpl =~ s/^\s+|\s+$//g;
+	my $returnFieldSmallTpl = $c->{returnfield_small_tpl} || undef;
+	$returnFieldSmallTpl =~ s/\n//g;
+	$returnFieldSmallTpl =~ s/\r//g;
+	$returnFieldSmallTpl =~ s/^\s+|\s+$//g;
+
+	my $fieldID = $c->{field_id};
+
 	# Prepare configuration for JS
 	my $json = encode_json({
+		webURL => RT->Config->Get('WebURL'),
+		resultLimit => 10,
 		sourceName => $name,
 		fieldName => $fieldName,
 		value => $selectedData,
 		id => $htmlid,
-		fieldTpl => $c->{field_tpl} || undef,
+		fieldID => $fieldID,
+		fieldTpl => $fieldTpl,
 		fieldConfig => $c->{field_config} || {},
-		returnFieldTpl => $c->{returnfield_tpl} || undef,
+		returnFieldTpl => $returnFieldTpl,
+		returnFieldSmallTpl => $returnFieldSmallTpl,
 		returnFieldConfig => $c->{returnfield_config} || {},
 		objectType => $ticket ? ref($ticket) : '',
 		objectId => $ticket ? $ticket->Id : ''
 	});
 
-	my $fieldTpl = $c->{field_tpl} || undef;
-
-	$fieldTpl =~ s/\n//g;
-	$fieldTpl =~ s/\r//g;
-	$fieldTpl =~ s/^\s+|\s+$//g;
-
-	my $fieldID = $c->{field_id};
 </%INIT>
 
 <script type="text/javascript">
 
 	var $ = jQuery; // RT doesn't do that for us.
 
-	//TODO: Pass template variables as configuration hash.
 	$( function() {
-		//var config = $.parseJSON('<% $json | n %>');
+		var config = $.parseJSON('<% $json | n %>');
 
 		$( "input[name=rt-extension-dbcustomfield-search-input]" ).autocomplete({
 			delay: 500,
@@ -75,11 +86,11 @@
 			source: function (request, response){
 				//console.log($(this));
 
-				var dataURL = "<% RT->Config->Get('WebURL') %>" + "RT-Extension-DBCustomField/Provider.html?source="
-				    + "<%$name%>" + "&query=" + $("input[name=rt-extension-dbcustomfield-search-input]").val();
+				var dataURL = config['webURL'] + "RT-Extension-DBCustomField/Provider.html?source="
+				    + config['sourceName'] + "&query=" + $("input[name=rt-extension-dbcustomfield-search-input]").val();
 
 				//TODO: Remove
-				console.log("Requesting data from URL: " + dataURL);
+				console.debug("Requesting data from URL: " + dataURL);
 
 				$.ajax({
 					type: "POST",
@@ -91,7 +102,7 @@
 						// - result[] with hashes inside
 						// - { "globalid", "id", "name", "net_global_id_c", "shortname", "shortname_c" } which are defined in the configuration as 'returnfields' and 'returnfield_id'
 						// TODO: Remove
-						console.log("success: " + text);
+						//console.log("success: " + text);
 						console.log(data);
 
 						// Return formatted data
@@ -101,7 +112,7 @@
 							formattedResponse.push(a); // Use the entire map, formatting is below.
 						});
 
-						response(formattedResponse.slice(0, 10)); // Limit result set
+						response(formattedResponse.slice(0, config['resultLimit'])); // Limit result set
 					},
 					error: function (request, status, error) {
 						// TODO: Remove
@@ -112,14 +123,31 @@
 			},
 			select: function(event, ui) {
 				// TODO: Remove
-				console.log( "Selected: " + ui.item.name + " aka " + ui.item.globalid );
+				console.debug( "Selected: " + ui.item.name + " aka " + ui.item.globalid );
+
+				var tmpl = config['returnFieldSmallTpl']; //TODO: Figure out how to avoid HTML escaping here.
+
+				// required by extractValue helper
+				this.item = ui.item;
+				var parent = this;
+
+				function extractValue(match, string, offset) {
+					console.log("Match: '" + match + "' offset: '" + offset + "' string: '" + string + "'");
+					console.log(parent.item);
+					console.log("Item Value: " + parent.item[string]);
+
+					return parent.item[string];
+				}
+
+				var formattedTmpl = tmpl.replace(/\{([^\}]+)\}/g, extractValue)
+
+				console.log("Template: '" + tmpl + "' formatted: '" + formattedTmpl + "'");
 
 				// 'name' is what the user sees in the input field which we defined ourselves in $this.
-				//TODO: Use the small template?
-				$(this).val(ui.item.name);
+				$(this).val(formattedTmpl);
 
 				// 'fieldName' is our hidden input form and the global stored ID for the CF. This can be defined in the configuration.
-				$("input[name='<%$fieldName%>']").val(ui.item["<%$fieldID%>"]);
+				$("input[name='" + config['fieldName'] + "']").val(ui.item[" + config['fieldID'] + "]);
 
 				// tell autocomplete that the select event has set a value
 				return false;
@@ -130,7 +158,7 @@
 		})
 		.data("ui-autocomplete")._renderItem = function (ul, item) {
 			// Overwrite received data with our own template
-			var tmpl = "<%$fieldTpl%>"; //TODO: Figure out how to avoid HTML escaping here.
+			var tmpl = config['fieldTpl']; //TODO: Figure out how to avoid HTML escaping here.
 
 			// required by extractValue helper
 			this.item = item;
