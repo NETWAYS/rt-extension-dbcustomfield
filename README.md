@@ -15,9 +15,14 @@
 Connect databases to custom fields.
 
 - Search for multiple values with custom queries.
-- Map search and query results into presentation templates.
 - Livesearch on custom field creation.
+- Map search and query results into presentation templates.
 - Custom field stores a single global ID, future ticket views always fetch the external current data.
+
+![Create ticket DBCF livesearch](doc/dbcustomfield-create-ticket-livesearch.png)
+
+![View ticket DBCF](doc/dbcustomfield-view-ticket.png)
+
 
 ## License
 
