@@ -198,9 +198,8 @@ Set ($DBCustomField_Queries, {
 
                 # Specify the template used to show this CF inside the ticket details.
                 'returnfield_small_tpl' => q{{shortname} ({globalid})},
-
-                # TODO: HTML support
-                # <div>{name} (<span style="font-weight: bold;">{globalid}</span>)</div>
+		# HTML version
+		#'returnfield_small_tpl' => q{<div>{name} (<span style="font-weight: bold;">{globalid}</span>)</div>},
 
                 # Extra config for CF edit.
                 'returnfield_config' => {

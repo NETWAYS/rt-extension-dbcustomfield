@@ -37,14 +37,17 @@
 	$fieldTpl =~ s/\n//g;
 	$fieldTpl =~ s/\r//g;
 	$fieldTpl =~ s/^\s+|\s+$//g;
+	$fieldTpl =~ s/"/&quot;/g;
 	my $returnFieldTpl = $c->{returnfield_tpl} || undef;
 	$returnFieldTpl =~ s/\n//g;
 	$returnFieldTpl =~ s/\r//g;
 	$returnFieldTpl =~ s/^\s+|\s+$//g;
+	$returnFieldTpl =~ s/"/&quot;/g;
 	my $returnFieldSmallTpl = $c->{returnfield_small_tpl} || undef;
 	$returnFieldSmallTpl =~ s/\n//g;
 	$returnFieldSmallTpl =~ s/\r//g;
 	$returnFieldSmallTpl =~ s/^\s+|\s+$//g;
+	$returnFieldSmallTpl =~ s/"/&quot;/g;
 
 	my $fieldID = $c->{field_id};
 
@@ -103,7 +106,7 @@
 						// - { "globalid", "id", "name", "net_global_id_c", "shortname", "shortname_c" } which are defined in the configuration as 'returnfields' and 'returnfield_id'
 						// TODO: Remove
 						//console.log("success: " + text);
-						console.log(data);
+						//console.log(data);
 
 						// Return formatted data
 						var formattedResponse = [];
@@ -116,38 +119,38 @@
 					},
 					error: function (request, status, error) {
 						// TODO: Remove
-						console.log("error: " + request.responseText);
+						//console.log("error: " + request.responseText);
 					}
 				})
 
 			},
 			select: function(event, ui) {
 				// TODO: Remove
-				console.debug( "Selected: " + ui.item.name + " aka " + ui.item.globalid );
+				//console.debug( "Selected: " + ui.item.name + " aka " + ui.item.globalid );
 
-				var tmpl = config['returnFieldSmallTpl']; //TODO: Figure out how to avoid HTML escaping here.
+				var tmpl = config['returnFieldTpl']; //This is put into the form on select.
 
 				// required by extractValue helper
 				this.item = ui.item;
 				var parent = this;
 
 				function extractValue(match, string, offset) {
-					console.log("Match: '" + match + "' offset: '" + offset + "' string: '" + string + "'");
-					console.log(parent.item);
-					console.log("Item Value: " + parent.item[string]);
+					//console.log("Match: '" + match + "' offset: '" + offset + "' string: '" + string + "'");
+					//console.log(parent.item);
+					//console.log("Item Value: " + parent.item[string]);
 
 					return parent.item[string];
 				}
 
 				var formattedTmpl = tmpl.replace(/\{([^\}]+)\}/g, extractValue)
 
-				console.log("Template: '" + tmpl + "' formatted: '" + formattedTmpl + "'");
+				//console.log("Template: '" + tmpl + "' formatted: '" + formattedTmpl + "'");
 
 				// 'name' is what the user sees in the input field which we defined ourselves in $this.
 				$(this).val(formattedTmpl);
 
 				// 'fieldName' is our hidden input form and the global stored ID for the CF. This can be defined in the configuration.
-				$("input[name='" + config['fieldName'] + "']").val(ui.item[" + config['fieldID'] + "]);
+				$("input[name='" + config['fieldName'] + "']").val(ui.item[config['fieldID']]);
 
 				// tell autocomplete that the select event has set a value
 				return false;
@@ -158,16 +161,16 @@
 		})
 		.data("ui-autocomplete")._renderItem = function (ul, item) {
 			// Overwrite received data with our own template
-			var tmpl = config['fieldTpl']; //TODO: Figure out how to avoid HTML escaping here.
+			var tmpl = config['fieldTpl']; //This is rendered in the search dropdown.
 
 			// required by extractValue helper
 			this.item = item;
 			var parent = this;
 
 			function extractValue(match, string, offset) {
-				console.log("Match: '" + match + "' offset: '" + offset + "' string: '" + string + "'");
-				console.log(parent.item);
-				console.log("Item Value: " + parent.item[string]);
+				//console.log("Match: '" + match + "' offset: '" + offset + "' string: '" + string + "'");
+				//console.log(parent.item);
+				//console.log("Item Value: " + parent.item[string]);
 
 				return parent.item[string];
 			}
