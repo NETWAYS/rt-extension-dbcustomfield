@@ -215,6 +215,11 @@ Set ($DBCustomField_Queries, {
 });
 ```
 
+### Create Custom Fields
+
+Create a new custom field and choose the following type:
+
+- Select one value with autocompletion from db source
 
 ### Custom Fields Map
 
