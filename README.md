@@ -166,9 +166,6 @@ Set ($DBCustomField_Queries, {
                         {name} ({globalid})
                 },
 
-                # Extra config for CF edit.
-                'field_config' => {},
-
                 ##########################################################
                 # View DBCF
 
@@ -203,13 +200,8 @@ Set ($DBCustomField_Queries, {
 
                 # Specify the template used to show this CF inside the ticket details.
                 'returnfield_small_tpl' => q{{shortname} ({globalid})},
-		# HTML version
-		#'returnfield_small_tpl' => q{<div>{name} (<span style="font-weight: bold;">{globalid}</span>)</div>},
-
-                # Extra config for CF edit.
-                'returnfield_config' => {
-                        height => 50
-                },
+                # HTML version
+                #'returnfield_small_tpl' => q{<div>{name} (<span style="font-weight: bold;">{globalid}</span>)</div>},
         },
 
 });
@@ -233,4 +225,3 @@ Set($DBCustomField_Fields, {
 });
 
 ```
-

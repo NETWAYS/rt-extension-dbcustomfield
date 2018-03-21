@@ -430,8 +430,6 @@ connection above.
                       </div>
                      },
 
-                     'field_config' => {},
-
                     'returnquery'   => q{
                             SELECT
                                     __DBCF_FIELDS__
@@ -449,10 +447,6 @@ connection above.
 
 		    # returnfield_id is used to select the CF value in the WHERE condition. This setting maps it to a defined field above.
                     'returnfield_id' => 'globalid',
-
-                    'returnfield_config' => {
-                      height => 50
-                    },
 
                     'returnfield_tpl' => q{
                       <div>

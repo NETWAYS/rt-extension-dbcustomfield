@@ -61,10 +61,8 @@
 		id => $htmlid,
 		fieldID => $fieldID,
 		fieldTpl => $fieldTpl,
-		fieldConfig => $c->{field_config} || {},
 		returnFieldTpl => $returnFieldTpl,
 		returnFieldSmallTpl => $returnFieldSmallTpl,
-		returnFieldConfig => $c->{returnfield_config} || {},
 		objectType => $ticket ? ref($ticket) : '',
 		objectId => $ticket ? $ticket->Id : ''
 	});
