@@ -310,12 +310,16 @@ sub callQuery {
 				die ($query. '<br /><br />'. $c->errstr())
 			}
 
-			my (@out);
+			my (@out, $count);
+			my $limit = RT->Config->Get('DBCustomField_Suggestion_Limit') || 10;
 
 			while (my $row = $sth->fetchrow_hashref) {
 				my $dataRow = $self->convertHashToUtf8($row);
 				#RT->Logger->info("ROW: " + $dataRow);
 				push @out, $dataRow;
+				if (++$count == $limit) {
+					last;
+				}
 			}
 
 			if (! $self->{'pool'}->usePool) {
@@ -468,6 +472,10 @@ You need to map the database queries into custom fields. One query can be used f
     Set($DBCustomField_Fields, {
       'client' => 'companies'
     });
+
+By default the limit of suggestions displayed to the user is 10. To adjust this you can use the following option:
+
+	Set($DBCustomField_Suggestion_Limit, 25);
 
 
 =head1 AUTHOR

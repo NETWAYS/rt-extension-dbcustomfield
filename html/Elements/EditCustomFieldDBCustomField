@@ -107,10 +107,10 @@
 						var formattedResponse = [];
 
 						$.each(data.result, function (i, a, k) {
-							formattedResponse.push(a); // Use the entire map, formatting is below.
+							formattedResponse.push(a);
 						});
 
-						response(formattedResponse.slice(0, config['resultLimit'])); // Limit result set
+						response(formattedResponse);
 					},
 					error: function (request, status, error) {
 						// TODO: Remove
