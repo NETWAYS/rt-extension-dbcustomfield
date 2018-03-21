@@ -49,8 +49,6 @@
 	$returnFieldSmallTpl =~ s/^\s+|\s+$//g;
 	$returnFieldSmallTpl =~ s/"/&quot;/g;
 
-	my $fieldID = $c->{field_id};
-
 	# Prepare configuration for JS
 	my $json = encode_json({
 		webURL => RT->Config->Get('WebURL'),
@@ -59,7 +57,6 @@
 		fieldName => $fieldName,
 		value => $selectedData,
 		id => $htmlid,
-		fieldID => $fieldID,
 		fieldTpl => $fieldTpl,
 		returnFieldTpl => $returnFieldTpl,
 		returnFieldSmallTpl => $returnFieldSmallTpl,
@@ -101,7 +98,7 @@
 					success: function (data, text) {
 						// Provider.html puts
 						// - result[] with hashes inside
-						// - { "globalid", "id", "name", "net_global_id_c", "shortname", "shortname_c" } which are defined in the configuration as 'returnfields' and 'returnfield_id'
+						// - { "field_value", "id", "name", "net_global_id_c", "shortname", "shortname_c" } which are defined in the configuration as 'returnfields'
 						// TODO: Remove
 						//console.log("success: " + text);
 						//console.log(data);
@@ -124,7 +121,7 @@
 			},
 			select: function(event, ui) {
 				// TODO: Remove
-				//console.debug( "Selected: " + ui.item.name + " aka " + ui.item.globalid );
+				//console.debug( "Selected: " + ui.item.name + " aka " + ui.item.field_value );
 
 				var tmpl = config['returnFieldTpl']; //This is put into the form on select.
 
@@ -148,7 +145,7 @@
 				$(this).val(formattedTmpl);
 
 				// 'fieldName' is our hidden input form and the global stored ID for the CF. This can be defined in the configuration.
-				$("input[name='" + config['fieldName'] + "']").val(ui.item[config['fieldID']]);
+				$("input[name='" + config['fieldName'] + "']").val(ui.item["field_value"]);
 
 				// tell autocomplete that the select event has set a value
 				return false;

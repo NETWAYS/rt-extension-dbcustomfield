@@ -154,16 +154,13 @@ Set ($DBCustomField_Queries, {
                 # Define which field names are returned in the search result set (replaces __DBCF_FIELDS__).
                 'fields'         => {
                         'shortname'     => 'cstm.shortname_c',
-                        'globalid'      => 'cstm.net_global_id_c',
+                        'field_value'   => 'cstm.net_global_id_c',
                         'name'          => 'a.name'
                 },
 
-                # Stored ID as CF value, alias into 'fields' above.
-                'field_id' => 'globalid',
-
                 # Specify the template returned by the search. This is rendered via JS dropdown.
                 'field_tpl' => q{
-                        {name} ({globalid})
+                        {name} ({field_value})
                 },
 
                 ##########################################################
@@ -172,7 +169,7 @@ Set ($DBCustomField_Queries, {
                 # Specify the view query.
                 #
                 # '__DBCF_FIELDS__' is a placeholder for the 'returnfields' setting.
-                # '?' binds the value of the 'returnfield_id' column into to query as WHERE condition.
+                # '?' binds the value of the 'field_value' column into to query as WHERE condition.
                 # This selects the stored CF value as global unique ID.
                 'returnquery'   => q{
                         SELECT
@@ -186,22 +183,19 @@ Set ($DBCustomField_Queries, {
                 # Define which field names are returned in the view query result set (replaces __DBCF_FIELDS__).
                 'returnfields'         => {
                         'shortname'     => 'cstm.shortname_c',
-                        'globalid'      => 'cstm.net_global_id_c',
+                        'field_value'   => 'cstm.net_global_id_c',
                         'name'          => 'a.name'
                 },
 
-                # Stored ID as CF value, alias into 'fields' above.
-                'returnfield_id' => 'globalid',
-
                 # Specify the template returned by the view query. This is rendered as selected value in the form.
                 'returnfield_tpl' => q{
-                        {name} {globalid}
+                        {name} {field_value}
                 },
 
                 # Specify the template used to show this CF inside the ticket details.
-                'returnfield_small_tpl' => q{{shortname} ({globalid})},
+                'returnfield_small_tpl' => q{{shortname} ({field_value})},
                 # HTML version
-                #'returnfield_small_tpl' => q{<div>{name} (<span style="font-weight: bold;">{globalid}</span>)</div>},
+                #'returnfield_small_tpl' => q{<div>{name} (<span style="font-weight: bold;">{field_value}</span>)</div>},
         },
 
 });

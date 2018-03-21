@@ -58,20 +58,16 @@ CONFIGURATION
 
                         'fields'         => {
                           'shortname'  => 'cstm.shortname_c',
-                          'globalid'  => 'cstm.net_global_id_c',
+                          'field_value'  => 'cstm.net_global_id_c',
                           'name'    => 'a.name'
                         },
-
-                        'field_id' => 'cstm.net_global_id_c',
-
-                        'field_id_type' => 'string', # (Default is int)
 
                         'field_tpl' => q{
                           <div>
                             <tpl if="shortname">
                               <div><span style="font-weight: bold;">{shortname}</span></div>
                             </tpl>
-                            <div>{name} (<span style="font-weight: bold;">{globalid}</span>)</div>
+                            <div>{name} (<span style="font-weight: bold;">{field_value}</span>)</div>
                           </div>
                          },
 
@@ -86,22 +82,20 @@ CONFIGURATION
 
                         'returnfields'         => {
                           'shortname'  => 'cstm.shortname_c',
-                          'globalid'  => 'cstm.net_global_id_c',
+                          'field_value'  => 'cstm.net_global_id_c',
                           'name'    => 'a.name'
                         },
-
-                        'returnfield_id' => 'cstm.net_global_id_c',
 
                         'returnfield_tpl' => q{
                           <div>
                             <tpl if="shortname">
                               <div><span style="font-weight: bold;">{shortname}</span></div>
                             </tpl>
-                            <div>{name} (<span style="font-weight: bold;">{globalid}</span>)</div>
+                            <div>{name} (<span style="font-weight: bold;">{field_value}</span>)</div>
                           </div>
                         },
 
-                        'returnfield_small_tpl' => q{{shortname} ({globalid})}
+                        'returnfield_small_tpl' => q{{shortname} ({field_value})}
 
 
           },

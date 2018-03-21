@@ -100,11 +100,13 @@ sub getReturnValue {
 			my $query = $self->substituteQuery(
 				query	=> $qref->{'returnquery'},
 				fields	=> $qref->{'returnfields'},
-				idfield	=> $qref->{'returnfield_id'},
+				idfield	=> 'field_value',
 				value	=> $value,
 				ticket	=> $object
 			);
-
+			if (!$query) {
+				return;
+			}
 
 			my $sth = $c->prepare($query);
 
@@ -267,11 +269,14 @@ sub callQuery {
 
 				$query = $self->substituteQuery(
 					fields	=> $qref->{'fields'},
-					idfield	=> $qref->{'field_id'},
+					idfield	=> 'field_value',
 					query	=> $query,
 					where	=> $where,
 					ticket	=> $ticket
 				);
+				if (!$query) {
+					return;
+				}
 
 				$sth = $c->prepare($query);
 
@@ -286,10 +291,13 @@ sub callQuery {
 			else {
 				$query = $self->substituteQuery(
 					fields	=> $qref->{'fields'},
-					idfield	=> $qref->{'field_id'},
+					idfield	=> 'field_value',
 					query	=> $query,
 					ticket	=> $ticket
 				);
+				if (!$query) {
+					return;
+				}
 
 				$sth = $c->prepare($query);
 			}
@@ -412,21 +420,16 @@ connection above.
 
                     'fields'         => {
                       'shortname'  => 'cstm.shortname_c',
-                      'globalid'  => 'cstm.net_global_id_c',
+                      'field_value'  => 'cstm.net_global_id_c',
                       'name'    => 'a.name'
                     },
-
-		    # field_id is stored as value for the CF. This setting maps it to a defined field above.
-                    'field_id' => 'globalid',
-
-                    'field_id_type' => 'string', # (Default is int)
 
                     'field_tpl' => q{
                       <div>
                         <tpl if="shortname">
                           <div><span style="font-weight: bold;">{shortname}</span></div>
                         </tpl>
-                        <div>{name} (<span style="font-weight: bold;">{globalid}</span>)</div>
+                        <div>{name} (<span style="font-weight: bold;">{field_value}</span>)</div>
                       </div>
                      },
 
@@ -441,23 +444,20 @@ connection above.
 
                     'returnfields'         => {
                       'shortname'  => 'cstm.shortname_c',
-                      'globalid'  => 'cstm.net_global_id_c',
+                      'field_value'  => 'cstm.net_global_id_c',
                       'name'    => 'a.name'
                     },
-
-		    # returnfield_id is used to select the CF value in the WHERE condition. This setting maps it to a defined field above.
-                    'returnfield_id' => 'globalid',
 
                     'returnfield_tpl' => q{
                       <div>
                         <tpl if="shortname">
                           <div><span style="font-weight: bold;">{shortname}</span></div>
                         </tpl>
-                        <div>{name} (<span style="font-weight: bold;">{globalid}</span>)</div>
+                        <div>{name} (<span style="font-weight: bold;">{field_value}</span>)</div>
                       </div>
                     },
 
-                    'returnfield_small_tpl' => q{{shortname} ({globalid})}
+                    'returnfield_small_tpl' => q{{shortname} ({field_value})}
 
 
       },

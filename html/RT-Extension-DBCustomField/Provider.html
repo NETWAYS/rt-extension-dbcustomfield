@@ -13,6 +13,9 @@
 		query => $query || "",
 		ticket => $ticket
 	);
+	if (!$data) {
+		$m->abort(500);  # TODO: Should probably be accompanied by a proper error message ...
+	}
 
 	my $json = {
 		success => 1,
