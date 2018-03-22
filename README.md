@@ -132,30 +132,17 @@ Set ($DBCustomField_Queries, {
                 ##########################################################
                 # Edit CF
 
-                # Specify the search query. This query returns the configured 'fields' with their defined key.
+                # Specify the search query.
                 #
-                # '__DBCF_FIELDS__' is a placeholder for the 'fields' setting.
-                # '__DBCF_WHERE__' is a placeholder for the 'searchfields' and 'searchop' setting.
+                # '?' binds the user's search input into the query as WHERE condition.
                 'query' => q{
                         SELECT
-                        __DBCF_FIELDS__
+                        cstm.net_global_id_c as field_value, cstm.shortname_c as shortname, a.name
                         from accounts a
                         inner join accounts_cstm cstm on cstm.id_c = a.id and cstm.net_global_id_c
-                        WHERE a.deleted=0 and (__DBCF_WHERE__)
+                        WHERE a.deleted=0 and (cstm.net_global_id_c = ? OR cstm.shortname_c LIKE ? OR a.name LIKE ?)
                         order by shortname
                         LIMIT 300;
-                },
-
-                # Define the columns which are compared against the input search value (replaces __DBCF_WHERE__).
-                'searchfields'  => ['cstm.shortname_c', 'a.name', 'cstm.net_global_id_c'],
-                # Define the searchfields combination operator
-                'searchop'      => 'OR',
-
-                # Define which field names are returned in the search result set (replaces __DBCF_FIELDS__).
-                'fields'         => {
-                        'shortname'     => 'cstm.shortname_c',
-                        'field_value'   => 'cstm.net_global_id_c',
-                        'name'          => 'a.name'
                 },
 
                 # Specify the template returned by the search. This is rendered via JS dropdown.
@@ -168,23 +155,14 @@ Set ($DBCustomField_Queries, {
 
                 # Specify the view query.
                 #
-                # '__DBCF_FIELDS__' is a placeholder for the 'returnfields' setting.
-                # '?' binds the value of the 'field_value' column into to query as WHERE condition.
-                # This selects the stored CF value as global unique ID.
+                # '?' binds the value of the 'field_value' column into the query as WHERE condition.
                 'returnquery'   => q{
                         SELECT
-                        __DBCF_FIELDS__
+                        cstm.net_global_id_c as field_value, cstm.shortname_c as shortname, a.name
                         from accounts a
                         inner join accounts_cstm cstm on cstm.id_c = a.id and cstm.net_global_id_c
                         where a.deleted=0 and cstm.net_global_id_c=?
                         LIMIT 100
-                },
-
-                # Define which field names are returned in the view query result set (replaces __DBCF_FIELDS__).
-                'returnfields'         => {
-                        'shortname'     => 'cstm.shortname_c',
-                        'field_value'   => 'cstm.net_global_id_c',
-                        'name'          => 'a.name'
                 },
 
                 # Specify the template returned by the view query. This is rendered as selected value in the form.

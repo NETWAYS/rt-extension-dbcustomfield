@@ -45,21 +45,12 @@ CONFIGURATION
 
                         'query' => q{
                                 SELECT
-                                __DBCF_FIELDS__
+                                cstm.net_global_id_c as field_value, cstm.shortname_c as shortname, a.name
                                 from accounts a
                                 inner join accounts_cstm cstm on cstm.id_c = a.id and cstm.net_global_id_c
-                                WHERE a.deleted=0 __DBCF_AND_WHERE__
+                                WHERE a.deleted=0 and (cstm.net_global_id_c = ? OR cstm.shortname_c LIKE ? OR a.name LIKE ?)
                                 order by shortname
                                 LIMIT 300;
-                        },
-
-                        'searchfields'  => ['cstm.shortname_c', 'a.name', 'cstm.net_global_id_c'],
-                        'searchop'      => 'OR',
-
-                        'fields'         => {
-                          'shortname'  => 'cstm.shortname_c',
-                          'field_value'  => 'cstm.net_global_id_c',
-                          'name'    => 'a.name'
                         },
 
                         'field_tpl' => q{
@@ -73,17 +64,11 @@ CONFIGURATION
 
                         'returnquery'   => q{
                                 SELECT
-                                        __DBCF_FIELDS__
+                                cstm.net_global_id_c as field_value, cstm.shortname_c as shortname, a.name
                                 from accounts a
                                 inner join accounts_cstm cstm on cstm.id_c = a.id and cstm.net_global_id_c
                                 where cstm.net_global_id_c=?
                                 LIMIT 100
-                        },
-
-                        'returnfields'         => {
-                          'shortname'  => 'cstm.shortname_c',
-                          'field_value'  => 'cstm.net_global_id_c',
-                          'name'    => 'a.name'
                         },
 
                         'returnfield_tpl' => q{

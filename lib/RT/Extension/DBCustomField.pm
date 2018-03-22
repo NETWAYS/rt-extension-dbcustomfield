@@ -99,22 +99,15 @@ sub getReturnValue {
 
 			my $query = $self->substituteQuery(
 				query	=> $qref->{'returnquery'},
-				fields	=> $qref->{'returnfields'},
-				idfield	=> 'field_value',
-				value	=> $value,
+				value   => $value,
 				ticket	=> $object
 			);
-			if (!$query) {
-				return;
-			}
 
 			my $sth = $c->prepare($query);
 
 			if ($query =~ /\?/) {
 				$sth->bind_param(1, $value || 'INVALID');
 			}
-
-			RT->Logger->info("ReturnQuery ($name, ID=$value): $query");
 
 			my $re = $sth->execute();
 
@@ -174,48 +167,13 @@ sub wrapHash {
 sub substituteQuery {
 	my $self = shift;
 	my $h = {
-		fields	=> {},
-		idfield	=> undef,
 		query	=> undef,
-		where	=> undef,
+		value   => undef,
 		ticket	=> undef,
-		value	=> undef,
 		@_
 	};
 
 	my $query = $h->{'query'};
-
-	my (@fields, $f_string);
-	while (my($f_alias,$f_id) = each(%{ $h->{'fields'} })) {
-		# push @fields, sprintf('%s AS %s', $f_id, $f_alias);
-		push @fields, sprintf('%s AS %s', $f_id, $f_alias);
-		push @fields, "$f_id";
-	}
-
-	if ($h->{'idfield'}) {
-		# Alias into fields
-		my $idfield = $h->{'idfield'};
-
-		if (!$h->{'fields'}->{$idfield}) {
-			RT->Logger->crit("Error: Missing mapping between field ID and fields configuration.");
-			return;
-		}
-
-		my $realidfield = $h->{'fields'}->{$idfield};
-
-		push @fields, sprintf('%s as __dbcf_idfield__', $realidfield)
-	}
-
-	$f_string = join(', ', @fields);
-	$query =~ s/__DBCF_FIELDS__/$f_string/g;
-
-	if ($h->{'where'}) {
-		$query =~ s/__DBCF_AND_WHERE__/ and $h->{'where'}/g;
-		$query =~ s/__DBCF_WHERE__/$h->{'where'}/g;
-	} else {
-		$query =~ s/__DBCF_AND_WHERE__//g;
-		$query =~ s/__DBCF_WHERE__//g;
-	}
 
 	if (ref($h->{'ticket'}) eq 'RT::Ticket') {
 		my $t = $h->{'ticket'};
@@ -245,64 +203,25 @@ sub callQuery {
 	my $q = $ARGRef->{'query'};
 	my $ticket = $ARGRef->{'ticket'};
 
-	RT->Logger->info("NAME: $name, QUERY: $q, TICKET: $ticket");
-
 	if ((my $qref = $self->getQueryHash($name))) {
-		#RT->Logger->debug(Dumper($qref));
-
 		if ((my $c = $self->{pool}->getConnection($qref->{'connection'}))) {
-			#RT->Logger->debug(Dumper($c));
 
 			my $query = $qref->{'query'};
+			$query = $self->substituteQuery(
+				query	=> $query,
+				ticket	=> $ticket
+			);
 
-			my $sth = undef;
+			my $sth = $c->prepare($query);
 
-			if (ref $qref->{'searchfields'} eq 'ARRAY' && $q) {
-
-				my (@parts, $where);
-
-				foreach my $sf (@{ $qref->{'searchfields'} }) {
-					push @parts, sprintf('%s LIKE ?', $sf);
-				}
-
-				$where = join(' '. ($qref->{'searchop'} || 'OR'). ' ', @parts);
-
-				$query = $self->substituteQuery(
-					fields	=> $qref->{'fields'},
-					idfield	=> 'field_value',
-					query	=> $query,
-					where	=> $where,
-					ticket	=> $ticket
-				);
-				if (!$query) {
-					return;
-				}
-
-				$sth = $c->prepare($query);
-
-				RT->Logger->info("callQuery ($name, QueryVal=$q): $query");
-
-				for(my $i=1; $i<=scalar @parts; $i++) {
-					my $qarg = $q. '%';
-					$qarg =~ s/\*/%/g;
-					$sth->bind_param($i, $qarg);
+			my $questionMarkNo = 0;
+			while ($query =~ /((?:LIKE\s+?\?)|(?:(?<!LIKE)\s*?\?))/gi) {
+				if (substr(lc($1), 0, 4) eq 'like') {
+					$sth->bind_param(++$questionMarkNo, $q . '%');
+				} else {
+					$sth->bind_param(++$questionMarkNo, $q);
 				}
 			}
-			else {
-				$query = $self->substituteQuery(
-					fields	=> $qref->{'fields'},
-					idfield	=> 'field_value',
-					query	=> $query,
-					ticket	=> $ticket
-				);
-				if (!$query) {
-					return;
-				}
-
-				$sth = $c->prepare($query);
-			}
-
-			#RT->Logger->info("Statement: " + $sth->{Statement});
 
 			my $re = $sth->execute();
 
@@ -315,10 +234,19 @@ sub callQuery {
 
 			while (my $row = $sth->fetchrow_hashref) {
 				my $dataRow = $self->convertHashToUtf8($row);
-				#RT->Logger->info("ROW: " + $dataRow);
-				push @out, $dataRow;
-				if (++$count == $limit) {
+				if (!exists($dataRow->{'field_value'})) {
+					RT->Logger->error(
+						'Column "field_value" missing in result. Does the "' . $name . '" query return one?'
+					);
 					last;
+				} elsif (!$dataRow->{'field_value'}) {
+					RT->Logger->warning('Column "field_value" empty in result. Enable debug log for more details.');
+					RT->Logger->debug('Result row was: ' . Dumper($dataRow));
+				} else {
+					push @out, $dataRow;
+					if (++$count == $limit) {
+						last;
+					}
 				}
 			}
 
@@ -411,21 +339,12 @@ connection above.
 
                     'query' => q{
                             SELECT
-                            __DBCF_FIELDS__
+                            cstm.net_global_id_c as field_value, cstm.shortname_c as shortname, a.name
                             from accounts a
                             inner join accounts_cstm cstm on cstm.id_c = a.id and cstm.net_global_id_c
-                            WHERE a.deleted=0 __DBCF_AND_WHERE__
+                            WHERE a.deleted=0 and (cstm.net_global_id_c = ? OR cstm.shortname_c LIKE ? OR a.name LIKE ?)
                             order by shortname
                             LIMIT 300;
-                    },
-
-                    'searchfields'  => ['cstm.shortname_c', 'a.name', 'cstm.net_global_id_c'],
-                    'searchop'      => 'OR',
-
-                    'fields'         => {
-                      'shortname'  => 'cstm.shortname_c',
-                      'field_value'  => 'cstm.net_global_id_c',
-                      'name'    => 'a.name'
                     },
 
                     'field_tpl' => q{
@@ -439,17 +358,11 @@ connection above.
 
                     'returnquery'   => q{
                             SELECT
-                                    __DBCF_FIELDS__
+                            cstm.net_global_id_c as field_value, cstm.shortname_c as shortname, a.name
                             from accounts a
                             inner join accounts_cstm cstm on cstm.id_c = a.id and cstm.net_global_id_c
                             where cstm.net_global_id_c=?
                             LIMIT 100
-                    },
-
-                    'returnfields'         => {
-                      'shortname'  => 'cstm.shortname_c',
-                      'field_value'  => 'cstm.net_global_id_c',
-                      'name'    => 'a.name'
                     },
 
                     'returnfield_tpl' => q{
