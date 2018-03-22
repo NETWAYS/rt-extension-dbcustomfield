@@ -144,7 +144,7 @@ sub getReturnValueSmall {
 	if ($qref && $id) {
 		my $row = $self->getReturnValue($id, $value, $object);
 		return unless($row);
-		return $self->wrapHash($row, $qref->{'returnfield_small_tpl'});
+		return $self->wrapHash($row, $qref->{'returnfield_small_tpl'} || '{field_value}');
 	}
 
 }

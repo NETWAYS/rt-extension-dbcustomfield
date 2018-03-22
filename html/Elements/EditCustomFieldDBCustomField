@@ -33,17 +33,17 @@
 		$selectedData = RT::Extension::DBCustomField->new()->getReturnValue($name, $value, $ticket);
 	}
 
-	my $fieldTpl = $c->{field_tpl} || undef;
+	my $fieldTpl = $c->{field_tpl} || '{field_value}';
 	$fieldTpl =~ s/\n//g;
 	$fieldTpl =~ s/\r//g;
 	$fieldTpl =~ s/^\s+|\s+$//g;
 	$fieldTpl =~ s/"/&quot;/g;
-	my $returnFieldTpl = $c->{returnfield_tpl} || undef;
+	my $returnFieldTpl = $c->{returnfield_tpl} || '{field_value}';
 	$returnFieldTpl =~ s/\n//g;
 	$returnFieldTpl =~ s/\r//g;
 	$returnFieldTpl =~ s/^\s+|\s+$//g;
 	$returnFieldTpl =~ s/"/&quot;/g;
-	my $returnFieldSmallTpl = $c->{returnfield_small_tpl} || undef;
+	my $returnFieldSmallTpl = $c->{returnfield_small_tpl} || '{field_value}';
 	$returnFieldSmallTpl =~ s/\n//g;
 	$returnFieldSmallTpl =~ s/\r//g;
 	$returnFieldSmallTpl =~ s/^\s+|\s+$//g;
