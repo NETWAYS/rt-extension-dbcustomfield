@@ -98,7 +98,7 @@ sub getReturnValue {
 		if ((my $c = $self->{pool}->getConnection($qref->{'connection'}))) {
 
 			my $query = $self->substituteQuery(
-				query	=> $qref->{'returnquery'},
+				query	=> $qref->{'display_value'},
 				value   => $value,
 				ticket	=> $object
 			);
@@ -144,7 +144,7 @@ sub getReturnValueSmall {
 	if ($qref && $id) {
 		my $row = $self->getReturnValue($id, $value, $object);
 		return unless($row);
-		return $self->wrapHash($row, $qref->{'returnfield_small_tpl'} || '{field_value}');
+		return $self->wrapHash($row, $qref->{'display_value_tpl'} || '{field_value}');
 	}
 
 }
@@ -206,9 +206,8 @@ sub callQuery {
 	if ((my $qref = $self->getQueryHash($name))) {
 		if ((my $c = $self->{pool}->getConnection($qref->{'connection'}))) {
 
-			my $query = $qref->{'query'};
-			$query = $self->substituteQuery(
-				query	=> $query,
+			my $query = $self->substituteQuery(
+				query	=> $qref->{'suggestions'},
 				ticket	=> $ticket
 			);
 
@@ -337,47 +336,32 @@ connection above.
 
                 'connection'    => 'sugarcrm',
 
-                    'query' => q{
-                            SELECT
-                            cstm.net_global_id_c as field_value, cstm.shortname_c as shortname, a.name
-                            from accounts a
-                            inner join accounts_cstm cstm on cstm.id_c = a.id and cstm.net_global_id_c
-                            WHERE a.deleted=0 and (cstm.net_global_id_c = ? OR cstm.shortname_c LIKE ? OR a.name LIKE ?)
-                            order by shortname
-                            LIMIT 300;
+                    'suggestions' => q{
+                        SELECT
+                        cstm.net_global_id_c AS field_value, cstm.shortname_c AS shortname, a.name
+                        FROM accounts a
+                        INNER JOIN accounts_cstm cstm ON cstm.id_c = a.id AND cstm.net_global_id_c
+                        WHERE a.deleted = 0 AND (cstm.net_global_id_c = ? OR cstm.shortname_c LIKE ? OR a.name LIKE ?)
+                        ORDER BY shortname
                     },
 
-                    'field_tpl' => q{
-                      <div>
-                        <tpl if="shortname">
-                          <div><span style="font-weight: bold;">{shortname}</span></div>
-                        </tpl>
-                        <div>{name} (<span style="font-weight: bold;">{field_value}</span>)</div>
-                      </div>
+                    'suggestions_tpl' => q{
+                		<div>
+                        	<strong>{shortname}</strong>
+                        	<div>{name} (<strong>{field_value}</strong>)</div>
+            			</div>
                      },
 
-                    'returnquery'   => q{
-                            SELECT
-                            cstm.net_global_id_c as field_value, cstm.shortname_c as shortname, a.name
-                            from accounts a
-                            inner join accounts_cstm cstm on cstm.id_c = a.id and cstm.net_global_id_c
-                            where cstm.net_global_id_c=?
-                            LIMIT 100
+                    'display_value' => q{
+                        SELECT
+                        cstm.net_global_id_c AS field_value, cstm.shortname_c AS shortname
+                        FROM accounts a
+                        INNER JOIN accounts_cstm cstm ON cstm.id_c = a.id AND cstm.net_global_id_c
+                        WHERE cstm.net_global_id_c = ?
                     },
 
-                    'returnfield_tpl' => q{
-                      <div>
-                        <tpl if="shortname">
-                          <div><span style="font-weight: bold;">{shortname}</span></div>
-                        </tpl>
-                        <div>{name} (<span style="font-weight: bold;">{field_value}</span>)</div>
-                      </div>
-                    },
-
-                    'returnfield_small_tpl' => q{{shortname} ({field_value})}
-
-
-      },
+                    'display_value_tpl' => '{shortname} ({field_value})',
+      		},
     });
 
 You need to map the database queries into custom fields. One query can be used for multiple fields if needed.

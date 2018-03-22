@@ -135,19 +135,21 @@ Set ($DBCustomField_Queries, {
                 # Specify the search query.
                 #
                 # '?' binds the user's search input into the query as WHERE condition.
-                'query' => q{
-                        SELECT
-                        cstm.net_global_id_c as field_value, cstm.shortname_c as shortname, a.name
-                        from accounts a
-                        inner join accounts_cstm cstm on cstm.id_c = a.id and cstm.net_global_id_c
-                        WHERE a.deleted=0 and (cstm.net_global_id_c = ? OR cstm.shortname_c LIKE ? OR a.name LIKE ?)
-                        order by shortname
-                        LIMIT 300;
+                'suggestions' => q{
+                    SELECT
+                    cstm.net_global_id_c AS field_value, cstm.shortname_c AS shortname, a.name
+                    FROM accounts a
+                    INNER JOIN accounts_cstm cstm ON cstm.id_c = a.id AND cstm.net_global_id_c
+                    WHERE a.deleted = 0 AND (cstm.net_global_id_c = ? OR cstm.shortname_c LIKE ? OR a.name LIKE ?)
+                    ORDER BY shortname
                 },
 
                 # Specify the template returned by the search. This is rendered via JS dropdown.
-                'field_tpl' => q{
-                        {name} ({field_value})
+                'suggestions_tpl' => q{
+                    <div>
+                        <strong>{shortname}</strong>
+                        <div>{name} (<strong>{field_value}</strong>)</div>
+                    </div>
                 },
 
                 ##########################################################
@@ -156,24 +158,16 @@ Set ($DBCustomField_Queries, {
                 # Specify the view query.
                 #
                 # '?' binds the value of the 'field_value' column into the query as WHERE condition.
-                'returnquery'   => q{
-                        SELECT
-                        cstm.net_global_id_c as field_value, cstm.shortname_c as shortname, a.name
-                        from accounts a
-                        inner join accounts_cstm cstm on cstm.id_c = a.id and cstm.net_global_id_c
-                        where a.deleted=0 and cstm.net_global_id_c=?
-                        LIMIT 100
-                },
-
-                # Specify the template returned by the view query. This is rendered as selected value in the form.
-                'returnfield_tpl' => q{
-                        {name} {field_value}
+                'display_value' => q{
+                    SELECT
+                    cstm.net_global_id_c AS field_value, cstm.shortname_c AS shortname
+                    FROM accounts a
+                    INNER JOIN accounts_cstm cstm ON cstm.id_c = a.id AND cstm.net_global_id_c
+                    WHERE cstm.net_global_id_c = ?
                 },
 
                 # Specify the template used to show this CF inside the ticket details.
-                'returnfield_small_tpl' => q{{shortname} ({field_value})},
-                # HTML version
-                #'returnfield_small_tpl' => q{<div>{name} (<span style="font-weight: bold;">{field_value}</span>)</div>},
+                'display_value_tpl' => '{shortname} ({field_value})'
         },
 
 });

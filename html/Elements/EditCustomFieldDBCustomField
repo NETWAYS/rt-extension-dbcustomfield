@@ -33,21 +33,16 @@
 		$selectedData = RT::Extension::DBCustomField->new()->getReturnValue($name, $value, $ticket);
 	}
 
-	my $fieldTpl = $c->{field_tpl} || '{field_value}';
-	$fieldTpl =~ s/\n//g;
-	$fieldTpl =~ s/\r//g;
-	$fieldTpl =~ s/^\s+|\s+$//g;
-	$fieldTpl =~ s/"/&quot;/g;
-	my $returnFieldTpl = $c->{returnfield_tpl} || '{field_value}';
-	$returnFieldTpl =~ s/\n//g;
-	$returnFieldTpl =~ s/\r//g;
-	$returnFieldTpl =~ s/^\s+|\s+$//g;
-	$returnFieldTpl =~ s/"/&quot;/g;
-	my $returnFieldSmallTpl = $c->{returnfield_small_tpl} || '{field_value}';
-	$returnFieldSmallTpl =~ s/\n//g;
-	$returnFieldSmallTpl =~ s/\r//g;
-	$returnFieldSmallTpl =~ s/^\s+|\s+$//g;
-	$returnFieldSmallTpl =~ s/"/&quot;/g;
+	my $suggestionsTpl = $c->{suggestions_tpl} || '{field_value}';
+	$suggestionsTpl =~ s/\n//g;
+	$suggestionsTpl =~ s/\r//g;
+	$suggestionsTpl =~ s/^\s+|\s+$//g;
+	$suggestionsTpl =~ s/"/&quot;/g;
+	my $displayValueTpl = $c->{display_value_tpl} || '{field_value}';
+	$displayValueTpl =~ s/\n//g;
+	$displayValueTpl =~ s/\r//g;
+	$displayValueTpl =~ s/^\s+|\s+$//g;
+	$displayValueTpl =~ s/"/&quot;/g;
 
 	# Prepare configuration for JS
 	my $json = encode_json({
@@ -57,9 +52,8 @@
 		fieldName => $fieldName,
 		value => $selectedData,
 		id => $htmlid,
-		fieldTpl => $fieldTpl,
-		returnFieldTpl => $returnFieldTpl,
-		returnFieldSmallTpl => $returnFieldSmallTpl,
+		suggestionsTpl => $suggestionsTpl,
+		displayValueTpl => $displayValueTpl,
 		objectType => $ticket ? ref($ticket) : '',
 		objectId => $ticket ? $ticket->Id : ''
 	});
@@ -123,7 +117,7 @@
 				// TODO: Remove
 				//console.debug( "Selected: " + ui.item.name + " aka " + ui.item.field_value );
 
-				var tmpl = config['returnFieldTpl']; //This is put into the form on select.
+				var tmpl = config['displayValueTpl']; //This is put into the form on select.
 
 				// required by extractValue helper
 				this.item = ui.item;
@@ -156,7 +150,7 @@
 		})
 		.data("ui-autocomplete")._renderItem = function (ul, item) {
 			// Overwrite received data with our own template
-			var tmpl = config['fieldTpl']; //This is rendered in the search dropdown.
+			var tmpl = config['suggestionsTpl']; //This is rendered in the search dropdown.
 
 			// required by extractValue helper
 			this.item = item;
