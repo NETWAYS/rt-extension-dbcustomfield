@@ -1,17 +1,16 @@
-<div class="rt-extension-dbcustomfield-search" id="<% $htmlid %>">
+<div class="rt-extension-dbcustomfield-search">
 	<div class="selected-field-value">
 		<span><% $selectedData || loc('(no value)') | n %></span>
 		<a href="#" class="clear-field-value" title="<% loc('Clear Value') %>">x</a>
 	</div>
 
 	<!-- this is what the user sees as dropdown field, the real input is hidden -->
-	<input name="<% $fieldName %>-search-input">
+	<input data-dbcustomfield-source="<% $name | n %>"
+		data-dbcustomfield-objectId="<% $objectId | n %>"
+		data-dbcustomfield-objectType="<% $objectType | n %>">
 	<input name="<% $fieldName %>" type="hidden" value="<% $value | n %>">
 </div>
 <%INIT>
-	$idcount++;
-	my $htmlid="rt-extension-dbcustomfield-$idcount";
-
 	unless ($CustomField->isDBCustomField()) {
 		$m->out('No DB customfield!');
 		return;
@@ -26,167 +25,19 @@
 		$fieldName = $NamePrefix. $CustomField->Id. '-Values';
 	}
 
-	my $ticket = undef;
+	my ($ticket, $objectId, $objectType) = undef;
 	if (ref($Object) eq 'RT::Ticket') {
 		$ticket = $Object;
+		$objectId = $ticket->Id;
+		$objectType = ref($ticket);
 	}
 
-	my $selectedData = undef;
-	my $value = undef;
-
+	my ($value, $selectedData) = undef;
 	if ($Values && $Values->Count()) {
 		$value = $Values->Next()->Content;
 		$selectedData = RT::Extension::DBCustomField->new()->getReturnValueSmall($name, $value, $ticket);
 	}
-
-	my $suggestionsTpl = $c->{suggestions_tpl} || '{field_value}';
-	$suggestionsTpl =~ s/\n//g;
-	$suggestionsTpl =~ s/\r//g;
-	$suggestionsTpl =~ s/^\s+|\s+$//g;
-	$suggestionsTpl =~ s/"/&quot;/g;
-	my $displayValueTpl = $c->{display_value_tpl} || '{field_value}';
-	$displayValueTpl =~ s/\n//g;
-	$displayValueTpl =~ s/\r//g;
-	$displayValueTpl =~ s/^\s+|\s+$//g;
-	$displayValueTpl =~ s/"/&quot;/g;
-
-	# Prepare configuration for JS
-	my $json = encode_json({
-		webURL => RT->Config->Get('WebURL'),
-		resultLimit => 10,
-		sourceName => $name,
-		id => $htmlid,
-		suggestionsTpl => $suggestionsTpl,
-		displayValueTpl => $displayValueTpl,
-		objectType => $ticket ? ref($ticket) : '',
-		objectId => $ticket ? $ticket->Id : ''
-	});
-
 </%INIT>
-
-<script type="text/javascript">
-
-	var $ = jQuery; // RT doesn't do that for us.
-
-	$( function() {
-		var config = $.parseJSON('<% $json | n %>');
-
-		$('.clear-field-value', '#<% $htmlid %>').on('click', function (event) {
-			$('.selected-field-value span', '#<% $htmlid %>').html('<% loc('(no value)') | n %>');
-			$('input[name="<% $fieldName %>"]').val('');
-
-			event.preventDefault();
-			return false;
-		});
-
-		$('input[name="<% $fieldName %>-search-input"]').autocomplete({
-			delay: 500,
-			minLength: 2,
-			open: function() {
-				if ($(this).is(':not(:focus)')) {
-					$(this).autocomplete('close');
-				}
-			},
-			source: function (request, response){
-				//console.log($(this));
-
-				var dataURL = config['webURL'] + "RT-Extension-DBCustomField/Provider.html?source="
-				    + config['sourceName'] + "&query=" + $('input[name="<% $fieldName %>-search-input"]').val();
-
-				//TODO: Remove
-				console.debug("Requesting data from URL: " + dataURL);
-
-				$.ajax({
-					type: "POST",
-					url: dataURL,
-					contentType: "application/json; charset=utf-8",
-					dataType: "json", // let JQuery automatically convert the response to JSON.
-					success: function (data, text) {
-						// Provider.html puts
-						// - result[] with hashes inside
-						// - { "field_value", "id", "name", "net_global_id_c", "shortname", "shortname_c" } which are defined in the configuration as 'returnfields'
-						// TODO: Remove
-						//console.log("success: " + text);
-						//console.log(data);
-
-						// Return formatted data
-						var formattedResponse = [];
-
-						$.each(data.result, function (i, a, k) {
-							formattedResponse.push(a);
-						});
-
-						response(formattedResponse);
-					},
-					error: function (request, status, error) {
-						// TODO: Remove
-						//console.log("error: " + request.responseText);
-					}
-				})
-
-			},
-			select: function(event, ui) {
-				// TODO: Remove
-				//console.debug( "Selected: " + ui.item.name + " aka " + ui.item.field_value );
-
-				var tmpl = config['displayValueTpl']; //This is put into the form on select.
-
-				// required by extractValue helper
-				this.item = ui.item;
-				var parent = this;
-
-				function extractValue(match, string, offset) {
-					//console.log("Match: '" + match + "' offset: '" + offset + "' string: '" + string + "'");
-					//console.log(parent.item);
-					//console.log("Item Value: " + parent.item[string]);
-
-					return parent.item[string];
-				}
-
-				var formattedTmpl = tmpl.replace(/\{([^\}]+)\}/g, extractValue)
-
-				//console.log("Template: '" + tmpl + "' formatted: '" + formattedTmpl + "'");
-
-				$(this).val('');  // Clear the input. Prevents the user from thinking it's possible to change the selection by simply typing..
-				$('.selected-field-value span', '#<% $htmlid %>').html(formattedTmpl);  // Shows the chosen value to the user
-
-				$('input[name="<% $fieldName %>"]').val(ui.item["field_value"]);
-
-				// tell autocomplete that the select event has set a value
-				return false;
-			},
-			close: function(event, ui) {
-				return true;
-			}
-		})
-		.data("ui-autocomplete")._renderItem = function (ul, item) {
-			// Overwrite received data with our own template
-			var tmpl = config['suggestionsTpl']; //This is rendered in the search dropdown.
-
-			// required by extractValue helper
-			this.item = item;
-			var parent = this;
-
-			function extractValue(match, string, offset) {
-				//console.log("Match: '" + match + "' offset: '" + offset + "' string: '" + string + "'");
-				//console.log(parent.item);
-				//console.log("Item Value: " + parent.item[string]);
-
-				return parent.item[string];
-			}
-
-			var formattedTmpl = tmpl.replace(/\{([^\}]+)\}/g, extractValue)
-
-			console.log("Template: '" + tmpl + "' formatted: '" + formattedTmpl + "'");
-
-			return $("<li></li>")
-			.data("ui-autocomplete-item", item)
-			.append(formattedTmpl)
-			.appendTo(ul);
-		}; // .data("ui-autocomplete")
-
-	}); // function
-</script>
 
 <%ARGS>
 $Object => undef
@@ -199,8 +50,3 @@ $Name => undef
 $Cols
 $Rows
 </%ARGS>
-<%once>
-	use Data::Dumper;
-	use JSON::XS;
-	my $idcount = 0;
-</%once>
