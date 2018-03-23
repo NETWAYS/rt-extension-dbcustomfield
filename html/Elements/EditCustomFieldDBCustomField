@@ -1,8 +1,12 @@
-<div class="rt-extension-dbcustomfield-search" id="<%$htmlid%>">
-<!-- this is what the user sees as dropdown field, the real input is hidden -->
-<div class="selected-field-value"><% $selectedData || loc('(no value)') | n %></div>
-<input name="rt-extension-dbcustomfield-search-input" style="width: 400px; table-layout: fixed;">
-<input name="<%$fieldName%>" type="hidden" value="">
+<div class="rt-extension-dbcustomfield-search" id="<% $htmlid %>">
+	<div class="selected-field-value">
+		<span><% $selectedData || loc('(no value)') | n %></span>
+		<a href="#" class="clear-field-value" title="<% loc('Clear Value') %>">x</a>
+	</div>
+
+	<!-- this is what the user sees as dropdown field, the real input is hidden -->
+	<input name="rt-extension-dbcustomfield-search-input" style="width: 400px; table-layout: fixed;">
+	<input name="<% $fieldName %>" type="hidden" value="">
 </div>
 <%INIT>
 	$idcount++;
@@ -66,6 +70,14 @@
 
 	$( function() {
 		var config = $.parseJSON('<% $json | n %>');
+
+		$('.clear-field-value', '#<% $htmlid %>').on('click', function (event) {
+			$('.selected-field-value span', '#<% $htmlid %>').html('<% loc('(no value)') | n %>');
+			$('input[name="<% $fieldName %>"]').val('');
+
+			event.preventDefault();
+			return false;
+		});
 
 		$( "input[name=rt-extension-dbcustomfield-search-input]" ).autocomplete({
 			delay: 500,

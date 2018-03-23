@@ -9,3 +9,15 @@
 .edit-custom-field.cftype-DBCustomField .selected-field-value {
     margin-bottom: .25em;
 }
+
+.edit-custom-field.cftype-DBCustomField .selected-field-value .clear-field-value {
+    line-height: 1;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+.edit-custom-field.cftype-DBCustomField .selected-field-value .clear-field-value:visited {
+    color: inherit;
+}
+.edit-custom-field.cftype-DBCustomField .selected-field-value .clear-field-value:hover {
+    color: red;
+}
