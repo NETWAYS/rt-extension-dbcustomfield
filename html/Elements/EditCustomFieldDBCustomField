@@ -5,7 +5,7 @@
 	</div>
 
 	<!-- this is what the user sees as dropdown field, the real input is hidden -->
-	<input name="rt-extension-dbcustomfield-search-input" style="width: 400px; table-layout: fixed;">
+	<input name="<% $fieldName %>-search-input">
 	<input name="<% $fieldName %>" type="hidden" value="">
 </div>
 <%INIT>
@@ -54,7 +54,6 @@
 		webURL => RT->Config->Get('WebURL'),
 		resultLimit => 10,
 		sourceName => $name,
-		fieldName => $fieldName,
 		id => $htmlid,
 		suggestionsTpl => $suggestionsTpl,
 		displayValueTpl => $displayValueTpl,
@@ -79,7 +78,7 @@
 			return false;
 		});
 
-		$( "input[name=rt-extension-dbcustomfield-search-input]" ).autocomplete({
+		$('input[name="<% $fieldName %>-search-input"]').autocomplete({
 			delay: 500,
 			minLength: 2,
 			open: function() {
@@ -91,7 +90,7 @@
 				//console.log($(this));
 
 				var dataURL = config['webURL'] + "RT-Extension-DBCustomField/Provider.html?source="
-				    + config['sourceName'] + "&query=" + $("input[name=rt-extension-dbcustomfield-search-input]").val();
+				    + config['sourceName'] + "&query=" + $('input[name="<% $fieldName %>-search-input"]').val();
 
 				//TODO: Remove
 				console.debug("Requesting data from URL: " + dataURL);
@@ -150,8 +149,7 @@
 				$(this).val('');  // Clear the input. Prevents the user from thinking it's possible to change the selection by simply typing..
 				$('.selected-field-value span', '#<% $htmlid %>').html(formattedTmpl);  // Shows the chosen value to the user
 
-				// 'fieldName' is our hidden input form and the global stored ID for the CF. This can be defined in the configuration.
-				$("input[name='" + config['fieldName'] + "']").val(ui.item["field_value"]);
+				$('input[name="<% $fieldName %>"]').val(ui.item["field_value"]);
 
 				// tell autocomplete that the select event has set a value
 				return false;
