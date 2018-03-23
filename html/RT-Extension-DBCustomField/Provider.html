@@ -3,16 +3,23 @@
 
 	my $ticket = undef;
 
-	if ($objectType eq 'RT::Ticket' && $objectId) {
+	if ($objectType && $objectType eq 'RT::Ticket' && $objectId) {
 		$ticket = RT::Ticket->new($session{'CurrentUser'});
 		$ticket->Load($objectId);
 	}
 
+	if (!$query) {
+		$m->abort(400);  # TODO: Should probably be accompanied by a proper error message ...
+	}
+
 	my $data = $search->callQuery(
 		name => $source,
-		query => $query || "",
+		query => $query,
 		ticket => $ticket
 	);
+	if (!$data) {
+		$m->abort(500);  # TODO: Should probably be accompanied by a proper error message ...
+	}
 
 	my $json = {
 		success => 1,

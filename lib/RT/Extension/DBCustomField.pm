@@ -98,21 +98,16 @@ sub getReturnValue {
 		if ((my $c = $self->{pool}->getConnection($qref->{'connection'}))) {
 
 			my $query = $self->substituteQuery(
-				query	=> $qref->{'returnquery'},
-				fields	=> $qref->{'returnfields'},
-				idfield	=> $qref->{'returnfield_id'},
-				value	=> $value,
+				query	=> $qref->{'display_value'},
+				value   => $value,
 				ticket	=> $object
 			);
-
 
 			my $sth = $c->prepare($query);
 
 			if ($query =~ /\?/) {
 				$sth->bind_param(1, $value || 'INVALID');
 			}
-
-			RT->Logger->info("ReturnQuery ($name, ID=$value): $query");
 
 			my $re = $sth->execute();
 
@@ -149,7 +144,7 @@ sub getReturnValueSmall {
 	if ($qref && $id) {
 		my $row = $self->getReturnValue($id, $value, $object);
 		return unless($row);
-		return $self->wrapHash($row, $qref->{'returnfield_small_tpl'});
+		return $self->wrapHash($row, $qref->{'display_value_tpl'} || '{field_value}');
 	}
 
 }
@@ -172,48 +167,13 @@ sub wrapHash {
 sub substituteQuery {
 	my $self = shift;
 	my $h = {
-		fields	=> {},
-		idfield	=> undef,
 		query	=> undef,
-		where	=> undef,
+		value   => undef,
 		ticket	=> undef,
-		value	=> undef,
 		@_
 	};
 
 	my $query = $h->{'query'};
-
-	my (@fields, $f_string);
-	while (my($f_alias,$f_id) = each(%{ $h->{'fields'} })) {
-		# push @fields, sprintf('%s AS %s', $f_id, $f_alias);
-		push @fields, sprintf('%s AS %s', $f_id, $f_alias);
-		push @fields, "$f_id";
-	}
-
-	if ($h->{'idfield'}) {
-		# Alias into fields
-		my $idfield = $h->{'idfield'};
-
-		if (!$h->{'fields'}->{$idfield}) {
-			RT->Logger->crit("Error: Missing mapping between field ID and fields configuration.");
-			return;
-		}
-
-		my $realidfield = $h->{'fields'}->{$idfield};
-
-		push @fields, sprintf('%s as __dbcf_idfield__', $realidfield)
-	}
-
-	$f_string = join(', ', @fields);
-	$query =~ s/__DBCF_FIELDS__/$f_string/g;
-
-	if ($h->{'where'}) {
-		$query =~ s/__DBCF_AND_WHERE__/ and $h->{'where'}/g;
-		$query =~ s/__DBCF_WHERE__/$h->{'where'}/g;
-	} else {
-		$query =~ s/__DBCF_AND_WHERE__//g;
-		$query =~ s/__DBCF_WHERE__//g;
-	}
 
 	if (ref($h->{'ticket'}) eq 'RT::Ticket') {
 		my $t = $h->{'ticket'};
@@ -243,58 +203,24 @@ sub callQuery {
 	my $q = $ARGRef->{'query'};
 	my $ticket = $ARGRef->{'ticket'};
 
-	RT->Logger->info("NAME: $name, QUERY: $q, TICKET: $ticket");
-
 	if ((my $qref = $self->getQueryHash($name))) {
-		#RT->Logger->debug(Dumper($qref));
-
 		if ((my $c = $self->{pool}->getConnection($qref->{'connection'}))) {
-			#RT->Logger->debug(Dumper($c));
 
-			my $query = $qref->{'query'};
+			my $query = $self->substituteQuery(
+				query	=> $qref->{'suggestions'},
+				ticket	=> $ticket
+			);
 
-			my $sth = undef;
+			my $sth = $c->prepare($query);
 
-			if (ref $qref->{'searchfields'} eq 'ARRAY' && $q) {
-
-				my (@parts, $where);
-
-				foreach my $sf (@{ $qref->{'searchfields'} }) {
-					push @parts, sprintf('%s LIKE ?', $sf);
-				}
-
-				$where = join(' '. ($qref->{'searchop'} || 'OR'). ' ', @parts);
-
-				$query = $self->substituteQuery(
-					fields	=> $qref->{'fields'},
-					idfield	=> $qref->{'field_id'},
-					query	=> $query,
-					where	=> $where,
-					ticket	=> $ticket
-				);
-
-				$sth = $c->prepare($query);
-
-				RT->Logger->info("callQuery ($name, QueryVal=$q): $query");
-
-				for(my $i=1; $i<=scalar @parts; $i++) {
-					my $qarg = $q. '%';
-					$qarg =~ s/\*/%/g;
-					$sth->bind_param($i, $qarg);
+			my $questionMarkNo = 0;
+			while ($query =~ /((?:LIKE\s+?\?)|(?:(?<!LIKE)\s*?\?))/gi) {
+				if (substr(lc($1), 0, 4) eq 'like') {
+					$sth->bind_param(++$questionMarkNo, $q . '%');
+				} else {
+					$sth->bind_param(++$questionMarkNo, $q);
 				}
 			}
-			else {
-				$query = $self->substituteQuery(
-					fields	=> $qref->{'fields'},
-					idfield	=> $qref->{'field_id'},
-					query	=> $query,
-					ticket	=> $ticket
-				);
-
-				$sth = $c->prepare($query);
-			}
-
-			#RT->Logger->info("Statement: " + $sth->{Statement});
 
 			my $re = $sth->execute();
 
@@ -302,12 +228,25 @@ sub callQuery {
 				die ($query. '<br /><br />'. $c->errstr())
 			}
 
-			my (@out);
+			my (@out, $count);
+			my $limit = RT->Config->Get('DBCustomField_Suggestion_Limit') || 10;
 
 			while (my $row = $sth->fetchrow_hashref) {
 				my $dataRow = $self->convertHashToUtf8($row);
-				#RT->Logger->info("ROW: " + $dataRow);
-				push @out, $dataRow;
+				if (!exists($dataRow->{'field_value'})) {
+					RT->Logger->error(
+						'Column "field_value" missing in result. Does the "' . $name . '" query return one?'
+					);
+					last;
+				} elsif (!$dataRow->{'field_value'}) {
+					RT->Logger->warning('Column "field_value" empty in result. Enable debug log for more details.');
+					RT->Logger->debug('Result row was: ' . Dumper($dataRow));
+				} else {
+					push @out, $dataRow;
+					if (++$count == $limit) {
+						last;
+					}
+				}
 			}
 
 			if (! $self->{'pool'}->usePool) {
@@ -341,11 +280,27 @@ RT::Extension::DBCustomField->new();
 
 =head1 NAME
 
-RT::Extension::DBCustomField - Connect databases to custom fields
+RT::Extension::DBCustomField - Link custom field values with external sources
 
 =head1 VERSION
 
 version 1.1.0
+
+=head1 DESCRIPTION
+
+This extension allows to link custom field values to external databases.
+
+Specific custom field types provided by this extension allow users to choose from a list of suggestions what they
+want to associate with a ticket. This works with the help of auto-completion which is invoked once a user typed
+two or more characters.
+
+Stored and displayed is by default what the user chose. However, by configuring custom templates it is possible
+to change what is displayed to the user. This applies to the list of suggestions as well as to the actual value
+users will see when viewing the ticket.
+
+Pleaes note that what is displayed to the user is not necessarily what is internally stored by RT for the custom
+field. Any time a ticket is viewed by a user the extension fetches what to display from the external database.
+This way it is possible to e.g. only store a primary key value and display just an associated name to users.
 
 =head1 RT VERSION
 
@@ -365,6 +320,8 @@ May need root permissions
 
 =item Edit your F</opt/rt4/etc/RT_SiteConfig.pm>
 
+Add this line:
+
     Plugin('RT::Extension::DBCustomField');
 
 =item Clear your mason cache
@@ -377,104 +334,76 @@ May need root permissions
 
 =head1 CONFIGURATION
 
-You need to specify C<$DBCustomField_Connections> which is a hash of connections.
+First you need to define C<$DBCustomField_Connections> which is a hash of available database connections.
 
-   Set($DBCustomField_Connections, {
-     'sugarcrm' => {
-       'dsn'      => 'DBI:mysql:database=SUGARCRMDB;host=MYHOST;port=3306;mysql_enable_utf8=1',
-       'username'    => 'USER',
-       'password'    => 'PASS',
-       'autoconnect'  => 1
-     }
-   });
+	Set($DBCustomField_Connections, {
+		'sugarcrm' => {
+			'dsn' => 'DBI:mysql:database=SUGARCRMDB;host=MYHOST;port=3306;mysql_enable_utf8=1',
+			'username' => 'USER',
+			'password' => 'PASS',
+			'autoconnect' => 1
+		}
+	});
 
-This cannection is then used to define the specific queries. The key identifies the values
-returned for later CF assignment. The 'connection' identifier is linked to the specified
-connection above.
+Then it is required to define C<$DBCustomField_Queries> which is a hash of available query definitions.
+Every query definition has a name and consists of two queries. One for the auto-completion suggestions
+and one to fetch display values with.
 
-    Set ($DBCustomField_Queries, {
-            'companies' => {
+	Set ($DBCustomField_Queries, {
+		'companies' => {
+			# The connection to use
+			'connection' => 'sugarcrm',
 
-                'connection'    => 'sugarcrm',
+			# The query to fetch auto-completion suggestions with. `field_value' is mandatory
+			# and any occurrence of `?' is replaced with a user's input.
+			'suggestions' => q{
+				SELECT
+				cstm.net_global_id_c AS field_value, cstm.shortname_c AS shortname, a.name
+				FROM accounts a
+				INNER JOIN accounts_cstm cstm ON cstm.id_c = a.id AND cstm.net_global_id_c
+				WHERE a.deleted = 0 AND (cstm.net_global_id_c = ? OR cstm.shortname_c LIKE ? OR a.name LIKE ?)
+				ORDER BY shortname
+			},
 
-                    'query' => q{
-                            SELECT
-                            __DBCF_FIELDS__
-                            from accounts a
-                            inner join accounts_cstm cstm on cstm.id_c = a.id and cstm.net_global_id_c
-                            WHERE a.deleted=0 __DBCF_AND_WHERE__
-                            order by shortname
-                            LIMIT 300;
-                    },
+			# The display template to use for each entry returned by the suggestions query. To reference specific
+			# columns here encapsulate their name with curly braces. The default is just `{field_value}'
+			# HTML support: Yes
+			'suggestions_tpl' => q{
+				<div>
+					<strong>{shortname}</strong>
+					<div>{name} (<strong>{field_value}</strong>)</div>
+				</div>
+			},
 
-                    'searchfields'  => ['cstm.shortname_c', 'a.name', 'cstm.net_global_id_c'],
-                    'searchop'      => 'OR',
+			# The query to fetch display values with. `field_value' is only required when not defining
+			# a custom display template. A single occurrence of `?' is replaced with the value internally
+			# stored by RT.
+			'display_value' => q{
+				SELECT
+				cstm.net_global_id_c AS field_value, cstm.shortname_c AS shortname
+				FROM accounts a
+				INNER JOIN accounts_cstm cstm ON cstm.id_c = a.id AND cstm.net_global_id_c
+				WHERE cstm.net_global_id_c = ?
+			},
 
-                    'fields'         => {
-                      'shortname'  => 'cstm.shortname_c',
-                      'globalid'  => 'cstm.net_global_id_c',
-                      'name'    => 'a.name'
-                    },
+			# The display template to use when showing the custom field value to users. To reference specific
+			# columns here encapsulate their name with curly braces. The default is just `{field_value}'.
+			# HTML support: No
+			'display_value_tpl' => '{shortname} ({field_value})'
+		},
+	});
 
-		    # field_id is stored as value for the CF. This setting maps it to a defined field above.
-                    'field_id' => 'globalid',
+Last you need to define C<$DBCustomField_Fields> which maps query definitions to specific custom fields.
+This controls which suggestions a user receives when typing something into a custom field input.
+Note that these custom fields need to be of the type provided by this extension.
 
-                    'field_id_type' => 'string', # (Default is int)
+	Set($DBCustomField_Fields, {
+		'Client' => 'companies'
+	});
 
-                    'field_tpl' => q{
-                      <div>
-                        <tpl if="shortname">
-                          <div><span style="font-weight: bold;">{shortname}</span></div>
-                        </tpl>
-                        <div>{name} (<span style="font-weight: bold;">{globalid}</span>)</div>
-                      </div>
-                     },
+By default the limit of suggestions displayed to the user is 10. To adjust this you can use the following:
 
-                     'field_config' => {},
-
-                    'returnquery'   => q{
-                            SELECT
-                                    __DBCF_FIELDS__
-                            from accounts a
-                            inner join accounts_cstm cstm on cstm.id_c = a.id and cstm.net_global_id_c
-                            where cstm.net_global_id_c=?
-                            LIMIT 100
-                    },
-
-                    'returnfields'         => {
-                      'shortname'  => 'cstm.shortname_c',
-                      'globalid'  => 'cstm.net_global_id_c',
-                      'name'    => 'a.name'
-                    },
-
-		    # returnfield_id is used to select the CF value in the WHERE condition. This setting maps it to a defined field above.
-                    'returnfield_id' => 'globalid',
-
-                    'returnfield_config' => {
-                      height => 50
-                    },
-
-                    'returnfield_tpl' => q{
-                      <div>
-                        <tpl if="shortname">
-                          <div><span style="font-weight: bold;">{shortname}</span></div>
-                        </tpl>
-                        <div>{name} (<span style="font-weight: bold;">{globalid}</span>)</div>
-                      </div>
-                    },
-
-                    'returnfield_small_tpl' => q{{shortname} ({globalid})}
-
-
-      },
-    });
-
-You need to map the database queries into custom fields. One query can be used for multiple fields if needed.
-
-    Set($DBCustomField_Fields, {
-      'client' => 'companies'
-    });
-
+	Set($DBCustomField_Suggestion_Limit, 25);
 
 =head1 AUTHOR
 
@@ -484,13 +413,13 @@ NETWAYS GmbH <support@netways.de>
 
 All bugs should be reported on L<GitHub|https://github.com/NETWAYS/rt-extension-dbcustomfield>
 
-
 =head1 COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2018 by NETWAYS GmbH <support@netways.de>
+This software is Copyright (c) 2018 by NETWAYS GmbH
 
 This is free software, licensed under:
-    GPL Version 2, June 1991
+
+    The GNU General Public License, Version 2, June 1991
 
 =cut
 

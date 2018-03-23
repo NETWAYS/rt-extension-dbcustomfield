@@ -9,20 +9,25 @@
 5. [Installation](#installation)
 6. [Configuration](#configuration)
 
-
 ## About
 
-Connect databases to custom fields.
+This extension allows to link custom field values to external databases.
 
-- Search for multiple values with custom queries.
-- Livesearch on custom field creation.
-- Map search and query results into presentation templates.
-- Custom field stores a single global ID, future ticket views always fetch the external current data.
+Specific custom field types provided by this extension allow users to choose from a list of suggestions what they want
+to associate with a ticket. This works with the help of auto-completion which is invoked once a user typed two or more
+characters.
 
 ![Create ticket DBCF livesearch](doc/dbcustomfield-create-ticket-livesearch.png)
 
+Stored and displayed is by default what the user chose. However, by configuring custom templates it is possible to
+change what is displayed to the user. This applies to the list of suggestions as well as to the actual value users
+will see when viewing the ticket.
+
 ![View ticket DBCF](doc/dbcustomfield-view-ticket.png)
 
+Pleaes note that what is displayed to the user is not necessarily what is internally stored by RT for the custom field.
+Any time a ticket is viewed by a user the extension fetches what to display from the external database. This way it is
+possible to e.g. only store a primary key value and display just an associated name to users.
 
 ## License
 
@@ -80,7 +85,6 @@ systemctl restart httpd
 systemctl restart apache2
 ```
 
-
 ## Configuration
 
 Edit your `/opt/rt4/etc/RT_SiteConfig.pm` configuration and include the extension.
@@ -91,127 +95,68 @@ Plugin('RT::Extension::DBCustomField');
 
 ### Connections
 
-Specify the connection identifier and its settings.
+First you need to define `$DBCustomField_Connections` which is a hash of available database connections.
 
-```
+```perl
 Set($DBCustomField_Connections, {
-        'sugarcrm' => {
-                'dsn'                   => 'DBI:mysql:database=sugarcrm;host=mysql-server.localdomain;port=3306;mysql_enable_utf8=1',
-                'username'              => 'username',
-                'password'              => 'password',
-                'autoconnect'           => 1
-        },
+    'sugarcrm' => {
+        'dsn' => 'DBI:mysql:database=SUGARCRMDB;host=MYHOST;port=3306;mysql_enable_utf8=1',
+        'username' => 'USER',
+        'password' => 'PASS',
+        'autoconnect' => 1
+    }
 });
 ```
 
 ### Queries
 
-Specify the query and its settings. This is where the logic hides for
+Then it is required to define `$DBCustomField_Queries` which is a hash of available query definitions.
+Every query definition has a name and consists of two queries. One for the auto-completion suggestions
+and one to fetch display values with.
 
-- Add/Edit the CF value
-- Show the CF value in ticket views
-
-Both views require their own queries, selected return field mappings,
-where conditions and the global unique ID which is stored as CF value.
-
-You can also control the formatted values as templates for
-
-- livesearch dropdown
-- form input
-- shown as CF
-
-More details are explained in the example below which queries company details
-from sugarCRM.
-
-```
+```perl
 Set ($DBCustomField_Queries, {
-        'companies' => {
-                # Specify the connection to use defined in $DBCustomField_Connections.
-                'connection' => 'sugarcrm',
+    'companies' => {
+        # The connection to use
+        'connection' => 'sugarcrm',
 
-                ##########################################################
-                # Edit CF
-
-                # Specify the search query. This query returns the configured 'fields' with their defined key.
-                #
-                # '__DBCF_FIELDS__' is a placeholder for the 'fields' setting.
-                # '__DBCF_WHERE__' is a placeholder for the 'searchfields' and 'searchop' setting.
-                'query' => q{
-                        SELECT
-                        __DBCF_FIELDS__
-                        from accounts a
-                        inner join accounts_cstm cstm on cstm.id_c = a.id and cstm.net_global_id_c
-                        WHERE a.deleted=0 and (__DBCF_WHERE__)
-                        order by shortname
-                        LIMIT 300;
-                },
-
-                # Define the columns which are compared against the input search value (replaces __DBCF_WHERE__).
-                'searchfields'  => ['cstm.shortname_c', 'a.name', 'cstm.net_global_id_c'],
-                # Define the searchfields combination operator
-                'searchop'      => 'OR',
-
-                # Define which field names are returned in the search result set (replaces __DBCF_FIELDS__).
-                'fields'         => {
-                        'shortname'     => 'cstm.shortname_c',
-                        'globalid'      => 'cstm.net_global_id_c',
-                        'name'          => 'a.name'
-                },
-
-                # Stored ID as CF value, alias into 'fields' above.
-                'field_id' => 'globalid',
-
-                # Specify the template returned by the search. This is rendered via JS dropdown.
-                'field_tpl' => q{
-                        {name} ({globalid})
-                },
-
-                # Extra config for CF edit.
-                'field_config' => {},
-
-                ##########################################################
-                # View DBCF
-
-                # Specify the view query.
-                #
-                # '__DBCF_FIELDS__' is a placeholder for the 'returnfields' setting.
-                # '?' binds the value of the 'returnfield_id' column into to query as WHERE condition.
-                # This selects the stored CF value as global unique ID.
-                'returnquery'   => q{
-                        SELECT
-                        __DBCF_FIELDS__
-                        from accounts a
-                        inner join accounts_cstm cstm on cstm.id_c = a.id and cstm.net_global_id_c
-                        where a.deleted=0 and cstm.net_global_id_c=?
-                        LIMIT 100
-                },
-
-                # Define which field names are returned in the view query result set (replaces __DBCF_FIELDS__).
-                'returnfields'         => {
-                        'shortname'     => 'cstm.shortname_c',
-                        'globalid'      => 'cstm.net_global_id_c',
-                        'name'          => 'a.name'
-                },
-
-                # Stored ID as CF value, alias into 'fields' above.
-                'returnfield_id' => 'globalid',
-
-                # Specify the template returned by the view query. This is rendered as selected value in the form.
-                'returnfield_tpl' => q{
-                        {name} {globalid}
-                },
-
-                # Specify the template used to show this CF inside the ticket details.
-                'returnfield_small_tpl' => q{{shortname} ({globalid})},
-		# HTML version
-		#'returnfield_small_tpl' => q{<div>{name} (<span style="font-weight: bold;">{globalid}</span>)</div>},
-
-                # Extra config for CF edit.
-                'returnfield_config' => {
-                        height => 50
-                },
+        # The query to fetch auto-completion suggestions with. `field_value' is mandatory
+        # and any occurrence of `?' is replaced with a user's input.
+        'suggestions' => q{
+            SELECT
+            cstm.net_global_id_c AS field_value, cstm.shortname_c AS shortname, a.name
+            FROM accounts a
+            INNER JOIN accounts_cstm cstm ON cstm.id_c = a.id AND cstm.net_global_id_c
+            WHERE a.deleted = 0 AND (cstm.net_global_id_c = ? OR cstm.shortname_c LIKE ? OR a.name LIKE ?)
+            ORDER BY shortname
         },
 
+        # The display template to use for each entry returned by the suggestions query. To reference specific
+        # columns here encapsulate their name with curly braces. The default is just `{field_value}'
+        # HTML support: Yes
+        'suggestions_tpl' => q{
+            <div>
+                <strong>{shortname}</strong>
+                <div>{name} (<strong>{field_value}</strong>)</div>
+            </div>
+        },
+
+        # The query to fetch display values with. `field_value' is only required when not defining
+        # a custom display template. A single occurrence of `?' is replaced with the value internally
+        # stored by RT.
+        'display_value' => q{
+            SELECT
+            cstm.net_global_id_c AS field_value, cstm.shortname_c AS shortname
+            FROM accounts a
+            INNER JOIN accounts_cstm cstm ON cstm.id_c = a.id AND cstm.net_global_id_c
+            WHERE cstm.net_global_id_c = ?
+        },
+
+        # The display template to use when showing the custom field value to users. To reference specific
+        # columns here encapsulate their name with curly braces. The default is just `{field_value}'.
+        # HTML support: No
+        'display_value_tpl' => '{shortname} ({field_value})'
+    },
 });
 ```
 
@@ -223,14 +168,20 @@ Create a new custom field and choose the following type:
 
 ### Custom Fields Map
 
-Map the defined queries to custom field names.
+Last you need to define `$DBCustomField_Fields` which maps query definitions to specific custom fields.
+This controls which suggestions a user receives when typing something into a custom field input.
+Note that these custom fields need to be of the type provided by this extension.
 
-The following example maps the CF `Client` to the `companies` query configured above.
-
-```
+```perl
 Set($DBCustomField_Fields, {
-        'Client'            => 'companies',
+    'Client' => 'companies'
 });
-
 ```
 
+### Suggestion Limit
+
+By default the limit of suggestions displayed to the user is 10. To adjust this you can use the following:
+
+```perl
+Set($DBCustomField_Suggestion_Limit, 25);
+```
