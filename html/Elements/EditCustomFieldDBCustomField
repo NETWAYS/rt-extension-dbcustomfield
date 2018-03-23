@@ -147,8 +147,8 @@
 
 				//console.log("Template: '" + tmpl + "' formatted: '" + formattedTmpl + "'");
 
-				// 'name' is what the user sees in the input field which we defined ourselves in $this.
-				$(this).val(formattedTmpl);
+				$(this).val('');  // Clear the input. Prevents the user from thinking it's possible to change the selection by simply typing..
+				$('.selected-field-value span', '#<% $htmlid %>').html(formattedTmpl);  // Shows the chosen value to the user
 
 				// 'fieldName' is our hidden input form and the global stored ID for the CF. This can be defined in the configuration.
 				$("input[name='" + config['fieldName'] + "']").val(ui.item["field_value"]);
