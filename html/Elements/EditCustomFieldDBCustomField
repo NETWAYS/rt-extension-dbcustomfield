@@ -6,7 +6,7 @@
 
 	<!-- this is what the user sees as dropdown field, the real input is hidden -->
 	<input name="<% $fieldName %>-search-input">
-	<input name="<% $fieldName %>" type="hidden" value="">
+	<input name="<% $fieldName %>" type="hidden" value="<% $value | n %>">
 </div>
 <%INIT>
 	$idcount++;
@@ -32,9 +32,10 @@
 	}
 
 	my $selectedData = undef;
+	my $value = undef;
 
 	if ($Values && $Values->Count()) {
-		my $value = $Values->Next()->Content;
+		$value = $Values->Next()->Content;
 		$selectedData = RT::Extension::DBCustomField->new()->getReturnValueSmall($name, $value, $ticket);
 	}
 
