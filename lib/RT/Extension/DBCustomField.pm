@@ -7,6 +7,7 @@ use v5.10.1;
 our $VERSION="1.1.0";
 
 RT->AddJavaScript('dbcustomfield-init.js');
+RT->AddStyleSheets('dbcustomfield.css');
 
 use RT::Extension::DBCustomField::Pool;
 use utf8;
@@ -388,8 +389,8 @@ and one to fetch display values with.
 
 			# The display template to use when showing the custom field value to users. To reference specific
 			# columns here encapsulate their name with curly braces. The default is just `{field_value}'.
-			# HTML support: No
-			'display_value_tpl' => '{shortname} ({field_value})'
+			# HTML support: Yes, but try to avoid manipulating the layout too much (e.g. with block elements)
+			'display_value_tpl' => '{shortname} (<i>{field_value}</i>)'
 		},
 	});
 

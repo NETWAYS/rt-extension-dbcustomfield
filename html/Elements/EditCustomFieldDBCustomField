@@ -1,5 +1,6 @@
 <div class="rt-extension-dbcustomfield-search" id="<%$htmlid%>">
 <!-- this is what the user sees as dropdown field, the real input is hidden -->
+<div class="selected-field-value"><% $selectedData || loc('(no value)') | n %></div>
 <input name="rt-extension-dbcustomfield-search-input" style="width: 400px; table-layout: fixed;">
 <input name="<%$fieldName%>" type="hidden" value="">
 </div>
@@ -30,7 +31,7 @@
 
 	if ($Values && $Values->Count()) {
 		my $value = $Values->Next()->Content;
-		$selectedData = RT::Extension::DBCustomField->new()->getReturnValue($name, $value, $ticket);
+		$selectedData = RT::Extension::DBCustomField->new()->getReturnValueSmall($name, $value, $ticket);
 	}
 
 	my $suggestionsTpl = $c->{suggestions_tpl} || '{field_value}';
@@ -50,7 +51,6 @@
 		resultLimit => 10,
 		sourceName => $name,
 		fieldName => $fieldName,
-		value => $selectedData,
 		id => $htmlid,
 		suggestionsTpl => $suggestionsTpl,
 		displayValueTpl => $displayValueTpl,
