@@ -8,9 +8,7 @@ $FieldTypes{'DBCustomField'} = {
 	sort_order => 83,
     selection_type => 1,
     labels => [
-		'Select multiple values with autocompletion from db source',      # loc
-		'Select one value with autocompletion from db source',            # loc
-		'Select up to [_1] values with autocompletion from db source',    # loc
+		'Select one value with autocompletion from db source' # loc
 	]
 };
 
