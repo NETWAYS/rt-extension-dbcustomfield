@@ -6,8 +6,8 @@
 
 	<!-- this is what the user sees as dropdown field, the real input is hidden -->
 	<input data-dbcustomfield-source="<% $name | n %>"
-		data-dbcustomfield-objectId="<% $objectId | n %>"
-		data-dbcustomfield-objectType="<% $objectType | n %>">
+		data-dbcustomfield-object-id="<% $objectId | n %>"
+		data-dbcustomfield-object-type="<% $objectType | n %>">
 	<input name="<% $fieldName %>" type="hidden" value="<% $value | n %>">
 </div>
 <%INIT>

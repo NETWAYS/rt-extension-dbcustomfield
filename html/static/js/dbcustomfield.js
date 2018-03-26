@@ -39,8 +39,8 @@ $( function() {
                     data: {
                         query: request.term,
                         source: $dbCustomFieldInput.data('dbcustomfield-source'),
-                        objectId: $dbCustomFieldInput.data('dbcustomfield-objectId'),
-                        objectType: $dbCustomFieldInput.data('dbcustomfield-objectType')
+                        objectId: $dbCustomFieldInput.data('dbcustomfield-object-id'),
+                        objectType: $dbCustomFieldInput.data('dbcustomfield-object-type')
                     },
                     success: function (data) {
                         try {
