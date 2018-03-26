@@ -8,7 +8,7 @@
 		$ticket->Load($objectId);
 	}
 
-	if (!$query) {
+	if (!$query || !$source) {
 		$m->abort(400);  # TODO: Should probably be accompanied by a proper error message ...
 	}
 
@@ -21,10 +21,23 @@
 		$m->abort(500);  # TODO: Should probably be accompanied by a proper error message ...
 	}
 
+	my $qref = $search->getConfigByName($source);
+
+	my @result;
+	foreach (@{ $data }) {
+		my $row = $_;
+
+		my @row;
+		push @row, $row->{'field_value'};
+		push @row, $search->wrapHash($row, $qref->{'display_value_tpl'} || '{field_value}');
+		push @row, $search->wrapHash($row, $qref->{'suggestions_tpl'} || '{field_value}');
+		push @result, \@row;
+	}
+
 	my $json = {
 		success => 1,
-		total => scalar(@{ $data }),
-		result => $data
+		total => scalar(@result),
+		result => \@result
 	};
 
 	my $coder = JSON::XS->new->ascii->pretty->allow_nonref;

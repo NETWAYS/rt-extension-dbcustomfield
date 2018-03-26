@@ -6,7 +6,7 @@ use v5.10.1;
 
 our $VERSION="1.1.0";
 
-RT->AddJavaScript('dbcustomfield-init.js');
+RT->AddJavaScript('dbcustomfield.js');
 RT->AddStyleSheets('dbcustomfield.css');
 
 use RT::Extension::DBCustomField::Pool;
