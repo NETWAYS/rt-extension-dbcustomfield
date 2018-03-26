@@ -1,5 +1,5 @@
 ---
-abstract: 'Connect databases to custom fields'
+abstract: 'Link custom field values with external sources'
 author:
   - 'NETWAYS GmbH <support@netways.de>'
 build_requires:
