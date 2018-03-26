@@ -17,44 +17,53 @@ $( function() {
         $dbCustomFieldInput.autocomplete({
     		delay: 500,
     		minLength: 2,
-    		open: function() {
-    			if ($(this).is(':not(:focus)')) {
-    				$(this).autocomplete('close');
-    			}
-    		},
     		source: function (request, response){
     			$.ajax({
     				type: "POST",
     				url: '<% RT->Config->Get('WebURL') | n %>RT-Extension-DBCustomField/Provider.html',
-    				dataType: "json", // let JQuery automatically convert the response to JSON.
                     data: {
                         query: request.term,
                         source: $dbCustomFieldInput.data('dbcustomfield-source'),
                         objectId: $dbCustomFieldInput.data('dbcustomfield-objectId'),
                         objectType: $dbCustomFieldInput.data('dbcustomfield-objectType')
                     },
-    				success: function (data, text) {
-    					var result = [];
-    					$.each(data.result, function (i, el) {
-    						result.push({
-                                label: el[2],
-                                value: {
-                                    field_value: el[0],
-                                    display_value: el[1]
-                                }
-                            });
-    					});
+    				success: function (data) {
+                        try {
+                            var json = JSON.parse(data);
+                        } catch (error) {
+                            console.error('[DBCustomField] Failed to parse completion result');
+                            console.debug(error);
+                            var json = null;
+                        }
 
-    					response(result);
+                        if (json == null) {
+                            response([{
+                                label: 'An error occurred!',
+                                disabled: true
+                            }]);
+                        } else {
+                            var result = [];
+                            $.each(json.result, function (i, el) {
+                            	result.push({
+                                    label: el[2],  // suggestions_tpl
+                                    value: {
+                                        field_value: el[0],
+                                        display_value: el[1]  // display_value_tpl
+                                    }
+                                });
+                            });
+
+                            response(result);
+                        }
     				},
-    				error: function (request, status, error) {
-    					// TODO: Remove
-    					//console.log("error: " + request.responseText);
+    				error: function (request, textStatus, errorThrown) {
+                        response();  // Required by jQueryUI's autocompletion widget
     				}
     			});
     		},
     		select: function(event, ui) {
-                // Clear the input. Prevents the user from thinking it's possible to change the selection by simply typing..
+                // Clear the input. Prevents the user from thinking it's
+                // possible to change the selection by simply typing..
     			$dbCustomFieldInput.val('');
 
                 // Shows the chosen value to the user
