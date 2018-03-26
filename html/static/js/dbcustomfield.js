@@ -6,6 +6,7 @@ $( function() {
         var $dbCustomFieldInput = $(this);
         var $dbCustomFieldSearch = $dbCustomFieldInput.parent('.rt-extension-dbcustomfield-search');
 
+        // Implements removal handling of the small "x" on the right of selected values
     	$('.clear-field-value', $dbCustomFieldSearch).on('click', function (event) {
     		$('.selected-field-value span', $dbCustomFieldSearch).html('<% loc('(no value)') | n %>');
     		$('input[type="hidden"]', $dbCustomFieldSearch).val('');
@@ -13,6 +14,19 @@ $( function() {
     		event.preventDefault();
     		return false;
     	});
+
+        // http://learn.jquery.com/jquery-ui/widget-factory/extending-widgets/
+        $.widget('DBCustomField.autocomplete', $.ui.autocomplete, {
+            _renderItem: function (ul, item) {
+                // jQueryUI utilizes .text instead of .html, that's why it's overriden here
+                var $li = $('<li>').html(item.label).appendTo(ul);
+                if (item.disabled) {
+                    $li.addClass('ui-state-disabled');
+                }
+
+                return $li;
+            }
+        });
 
         $dbCustomFieldInput.autocomplete({
     		delay: 500,
