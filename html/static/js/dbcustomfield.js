@@ -35,6 +35,7 @@ $( function() {
                 $.ajax({
                     type: "POST",
                     url: '<% RT->Config->Get('WebURL') | n %>RT-Extension-DBCustomField/Provider.html',
+                    dataType: 'text',  // We have to decode it ourselves, RT may respond with html at random times..
                     data: {
                         query: request.term,
                         source: $dbCustomFieldInput.data('dbcustomfield-source'),
