@@ -177,10 +177,8 @@ sub substituteQuery {
 	my $query = $h->{'query'};
 
 	if (ref($h->{'ticket'}) eq 'RT::Ticket') {
-		my $t = $h->{'ticket'};
-
-		$query =~ s/__TICKET\(([^\)]+)\)__/$t->$1/ge;
-		$query =~ s/__TICKET__/$t->Id/g;
+		my $ticketId = $h->{'ticket'}->Id;
+		$query =~ s/__TICKET__/$ticketId/g;
 	}
 
 	if (exists($h->{'value'}) && $h->{'value'}) {
@@ -405,6 +403,21 @@ Note that these custom fields need to be of the type provided by this extension.
 By default the limit of suggestions displayed to the user is 10. To adjust this you can use the following:
 
 	Set($DBCustomField_Suggestion_Limit, 25);
+
+=head2 ADVANCED CONFIGURATION
+
+=over
+
+=item C<__TICKET__>
+
+Can be used as part of any query to reference a ticket's ID. (Is replaced by this extension with an integer.)
+
+=item C<__VALUE__>
+
+Can be used only as part of the `display_value' query to reference the `field_value'.
+(Is replaced by this extension with whatever has been stored internally by RT.)
+
+=back
 
 =head1 AUTHOR
 
