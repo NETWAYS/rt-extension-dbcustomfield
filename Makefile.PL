@@ -5,7 +5,7 @@ license 'gpl_2';
 repository 'https://github.com/NETWAYS/rt-extension-dbcustomfield';
 
 requires_rt '4.4.2';
-rt_too_new '4.6.0';
+requires 'DBI' => '1.37';
 
 sign;
 WriteAll;
