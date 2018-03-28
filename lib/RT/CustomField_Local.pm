@@ -21,7 +21,7 @@ sub IsExternalValues {
 
 sub isDBCustomField {
 	my $self = shift;
-	if ($self->Type eq 'DBCustomField') {
+	if ($self->Type eq 'DBCustomField' && defined(RT->Config->Get('DBCustomField_Fields'))) {
     	if (exists(RT->Config->Get('DBCustomField_Fields')->{$self->Name})) {
     		return 1;
     	}
