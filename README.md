@@ -43,6 +43,9 @@ You may also send us an email to [support@netways.de](mailto:support@netways.de)
 ## Requirements
 
 - RT 4.4.2
+- DBI (>= 1.37)
+
+As well as an appropriate driver for the databases you want to integrate. (e.g. `DBD::mysql` for MySQL)
 
 ## Installation
 

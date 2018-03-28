@@ -305,6 +305,16 @@ This way it is possible to e.g. only store a primary key value and display just 
 
 Works with RT 4.4.2
 
+=head1 REQUIREMENTS
+
+=over
+
+=item DBI (>= 1.37)
+
+=back
+
+As well as an appropriate driver for the databases you want to integrate. (e.g. C<DBD::mysql> for MySQL)
+
 =head1 INSTALLATION
 
 =over
