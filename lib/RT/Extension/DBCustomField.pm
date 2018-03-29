@@ -349,8 +349,7 @@ First you need to define C<$DBCustomField_Connections> which is a hash of availa
 		'sugarcrm' => {
 			'dsn' => 'DBI:mysql:database=SUGARCRMDB;host=MYHOST;port=3306;mysql_enable_utf8=1',
 			'username' => 'USER',
-			'password' => 'PASS',
-			'autoconnect' => 1
+			'password' => 'PASS'
 		}
 	});
 

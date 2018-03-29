@@ -17,13 +17,13 @@ Specific custom field types provided by this extension allow users to choose fro
 to associate with a ticket. This works with the help of auto-completion which is invoked once a user typed two or more
 characters.
 
-![Create ticket DBCF livesearch](doc/dbcustomfield-create-ticket-livesearch.png)
+![Create ticket DBCF livesearch](doc/dbcustomfield-suggestions.jpg)
 
 Stored and displayed is by default what the user chose. However, by configuring custom templates it is possible to
 change what is displayed to the user. This applies to the list of suggestions as well as to the actual value users
 will see when viewing the ticket.
 
-![View ticket DBCF](doc/dbcustomfield-view-ticket.png)
+![View ticket DBCF](doc/dbcustomfield-display-value.jpg)
 
 Pleaes note that what is displayed to the user is not necessarily what is internally stored by RT for the custom field.
 Any time a ticket is viewed by a user the extension fetches what to display from the external database. This way it is
@@ -105,8 +105,7 @@ Set($DBCustomField_Connections, {
     'sugarcrm' => {
         'dsn' => 'DBI:mysql:database=SUGARCRMDB;host=MYHOST;port=3306;mysql_enable_utf8=1',
         'username' => 'USER',
-        'password' => 'PASS',
-        'autoconnect' => 1
+        'password' => 'PASS'
     }
 });
 ```
