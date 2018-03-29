@@ -4,7 +4,7 @@ use strict;
 use version;
 use v5.10.1;
 
-our $VERSION="1.1.0";
+our $VERSION='2.0.0';
 
 RT->AddJavaScript('dbcustomfield.js');
 RT->AddStyleSheets('dbcustomfield.css');
