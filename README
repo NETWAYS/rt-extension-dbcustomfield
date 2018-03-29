@@ -2,9 +2,6 @@ NAME
     RT::Extension::DBCustomField - Link custom field values with external
     sources
 
-VERSION
-    version 1.1.0
-
 DESCRIPTION
     This extension allows to link custom field values to external databases.
 
