@@ -1,9 +1,9 @@
 .edit-custom-field.cftype-DBCustomField .cflabel {
-    font-size: 1em;  // The default of .8em is too small, looks weird with the field value on the right
+    font-size: 1em;  /* The default of .8em is too small, looks weird with the field value on the right */
 }
 
 .edit-custom-field.cftype-DBCustomField .cflabel .type {
-    font-size: .8em;  // The default, usually inherited from .cflabel, but since it's overriden above..
+    font-size: .8em;  /* The default, usually inherited from .cflabel, but since it's overriden above.. */
 }
 
 .edit-custom-field.cftype-DBCustomField .selected-field-value {

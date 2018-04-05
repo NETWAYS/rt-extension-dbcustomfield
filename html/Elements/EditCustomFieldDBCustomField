@@ -1,5 +1,5 @@
 <div class="rt-extension-dbcustomfield-search">
-	<div class="selected-field-value">
+	<div class="selected-field-value" data-empty-label="<% loc('(no value)') %>">
 		<span><% $selectedData || loc('(no value)') | n %></span>
 		<a href="#" class="clear-field-value" title="<% loc('Clear Value') %>">x</a>
 	</div>
@@ -7,7 +7,8 @@
 	<!-- this is what the user sees as dropdown field, the real input is hidden -->
 	<input data-dbcustomfield-source="<% $name | n %>"
 		data-dbcustomfield-object-id="<% $objectId | n %>"
-		data-dbcustomfield-object-type="<% $objectType | n %>">
+		data-dbcustomfield-object-type="<% $objectType | n %>"
+		data-rt-root="<% RT->Config->Get('WebURL') | n %>">
 	<input name="<% $fieldName %>" type="hidden" value="<% $value | n %>">
 </div>
 <%INIT>

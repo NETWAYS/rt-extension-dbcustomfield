@@ -1,14 +1,11 @@
-
-var $ = jQuery; // RT doesn't do that for us.
-
-$( function() {
+jQuery( function($) {
     $('input[data-dbcustomfield-source]').each(function () {
         var $dbCustomFieldInput = $(this);
         var $dbCustomFieldSearch = $dbCustomFieldInput.parent('.rt-extension-dbcustomfield-search');
 
         // Implements removal handling of the small "x" on the right of selected values
         $('.clear-field-value', $dbCustomFieldSearch).on('click', function (event) {
-            $('.selected-field-value span', $dbCustomFieldSearch).html('<% loc('(no value)') | n %>');
+            $('.selected-field-value span', $dbCustomFieldSearch).html($('.selected-field-value').data('empty-label'));
             $('input[type="hidden"]', $dbCustomFieldSearch).val('');
 
             event.preventDefault();
@@ -34,7 +31,7 @@ $( function() {
             source: function (request, response){
                 $.ajax({
                     type: "POST",
-                    url: '<% RT->Config->Get('WebURL') | n %>RT-Extension-DBCustomField/Provider.html',
+                    url: $dbCustomFieldInput.data('rt-root') + 'RT-Extension-DBCustomField/Provider.html',
                     dataType: 'text',  // We have to decode it ourselves, RT may respond with html at random times..
                     data: {
                         query: request.term,
@@ -92,4 +89,4 @@ $( function() {
             }
         });
     });
-});
+}, jQuery);

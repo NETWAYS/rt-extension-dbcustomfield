@@ -16,6 +16,7 @@ meta-spec:
 name: RT-Extension-DBCustomField
 no_index:
   directory:
+    - static
     - html
     - inc
 requires:
