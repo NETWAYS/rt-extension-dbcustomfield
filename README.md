@@ -1,5 +1,10 @@
 # DBCustomField Extension for Request Tracker
 
+> [!IMPORTANT]
+> This project is no longer maintained and the repository has been archived.
+> No further development, bug fixes or support will be provided.
+> Feel free to fork the repository if you want to continue working on it.
+
 #### Table of Contents
 
 1. [About](#about)

@@ -1,5 +1,18 @@
 # Change Log
 
+## [v2.0.2](https://github.com/NETWAYS/rt-extension-dbcustomfield/tree/v2.0.2) (2026-06-11)
+[Full Changelog](https://github.com/NETWAYS/rt-extension-dbcustomfield/compare/v2.0.1...v2.0.2)
+
+This is the final release. The project is no longer maintained and the repository has been archived.
+
+**Fixed bugs:**
+
+- JSON: Let Perl decide which implementation to use [56ef086](https://github.com/NETWAYS/rt-extension-dbcustomfield/commit/56ef086)
+
+**Merged pull requests:**
+
+- Add license file [\#10](https://github.com/NETWAYS/rt-extension-dbcustomfield/pull/10) ([MisterMountain](https://github.com/MisterMountain))
+
 ## [v2.0.1](https://github.com/NETWAYS/rt-extension-dbcustomfield/tree/v2.0.1) (2018-04-05)
 [Full Changelog](https://github.com/NETWAYS/rt-extension-dbcustomfield/compare/v2.0.0...v2.0.1)
 
